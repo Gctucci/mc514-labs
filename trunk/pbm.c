@@ -1,17 +1,42 @@
 #include <netpbm/pbm.h>
 
 /*
+ * Função que transforma um vetor de bits em ints
+ * (uso interno)
+ */
+void bit2int(bit **bit, int *nlin, int *ncol, int **out)
+{
+	int i, j;
+	out = (int**) malloc(*nlin * sizeof(int*));
+	for(i=0; i<*nlin; i++)
+	{
+		out[i] = (int*)malloc(*ncol * sizeof(int));
+		for(j=0; j<*ncol; j++)
+		{
+			if(bit[i][j]==PBM_BLACK)
+				out[i][j] = 1;
+			else
+				out[i][j] = 0;
+		}
+	}
+}
+
+/*
  * Função que lê uma imagem pgm e retorna uma matriz de mapa
  */
-void pbm(char *arq, bit **tabuleiro, int *tamlin, int *tamcol)
+void pbm(char *arq, int **tabuleiro, int *nlin, int *ncol)
 {
 	FILE *img;
+	bit **tab;
 	
 	img = fopen(arq, "r");
 	if(img)
 	{
 		//void bit** pbm_readpbm(FILE * fp, int *colsP, int *rowsP);
-		tabuleiro = pbm_readpbm(img, tamcol, tamlin);
+		tab = pbm_readpbm(img, ncol, nlin);
+		bit2int(tab, nlin, ncol, tabuleiro);
+		
+		pbm_freearray(tab, *nlin);
 		return;
 	}
 	else
@@ -21,3 +46,4 @@ void pbm(char *arq, bit **tabuleiro, int *tamlin, int *tamcol)
 		exit(0);
 	}
 }
+
