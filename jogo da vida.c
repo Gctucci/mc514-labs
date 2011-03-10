@@ -7,6 +7,8 @@
 #define SUPERLOT 3
 #define SOLIDAO 2
 
+/*Estrutura de argumentos de uma thread, que possui um id unico, um ponteiro para o tabuleiro,
+a posicao da linha e coluna atuais e o tamanho do tabuleiro*/
 typedef struct thread_data_structure {
 
 	int id[3];
@@ -18,12 +20,12 @@ typedef struct thread_data_structure {
 
 } data;
 
-void* valida_celula(void *threadarg){
+int valida_celula(void*threadarg){
         //Indica a soma do numero de celulas vivas
         int num_viva;
-       	data *dados = (data*)threadarg;
+       	data* dados = (data*)threadarg;
 
-        if(dados->tabuleiro !=NULL){
+        if(&dados->tabuleiro !=NULL){
                 num_viva = conta_celula(threadarg);
                 /*Caso o numero de celulas vizinhas seja maior que tres ou menor
                 que dois, a celula morre por superlotação/solidão. Senão, ela sobrevive
@@ -34,7 +36,14 @@ void* valida_celula(void *threadarg){
                 else{
                         return VIVA;
                 }
+		
+
         }
+	else{
+		printf("ERROR; the original file is absent or corrupted.");
+   		exit(-1);
+
+	}
        
 }
 
@@ -68,7 +77,7 @@ int conta_celula(void *threadarg){
 
         for(i=lin-1;i<=lin+1;i++){
                 for(j=col-1;j<=col+1;j++){
-                        if(dados->tabuleiro[i][j] >0){
+                        if(&dados->tabuleiro[i][j] > 0){
                                 soma++;
                         }      
                 }
@@ -77,21 +86,45 @@ int conta_celula(void *threadarg){
 return soma;
 }
 
+/*função que a thread vai executar ao ser criada*/
+void *exec_thread(void *threadarg){
+
+	data *dados = (data*)threadarg;
+
+
+
+}
+
 int main (){
 
-	int i,j,nlin,ncol,t;
+	int i,j,nlin=2,ncol=2,t;
 	pthread_t** threads;
 	data** thread_data;
-
+	int ** pmatrix;
+	
+	
+	/*Inicializaçao das estruturas, onde threads sao as threads disponiveis - uma para cada celula 
+	do tabuleiro -, thread_data é a estrutura a ser passada como argumento para a função que as 
+	threads executam, e pmatrix é um tabuleiro auxiliar, que registra o proximo estado do jogo da vida*/ 
 	threads = (pthread_t **)malloc(nlin*sizeof(pthread_t*));
 	thread_data = (data **)malloc(nlin*sizeof(data*));
+	pmatrix = (int **)calloc(nlin,sizeof(int*));
+
 	for(i=0;i<nlin;i++){
+		threads[i]=(pthread_t*)malloc(ncol*sizeof(pthread_t));
+		thread_data[i]=(data*)malloc(ncol*sizeof(data));
+		pmatrix[i]=(int*)calloc(ncol,sizeof(int));
 		for(j=0;j<ncol;j++){
-			threads[i]=(pthread_t*)malloc(ncol*sizeof(pthread_t));
-			thread_data[i]=(data*)malloc(ncol*sizeof(data));
+
+			
+			thread_data[i][j].tabuleiro=pmatrix;
 			thread_data[i][j].id[0] = i;
 			thread_data[i][j].id[1] = j;
-			t=pthread_create(&threads[i][j],NULL,valida_celula,(void *)&thread_data);
+			thread_data[i][j].linha_atual = i;
+			thread_data[i][j].coluna_atual = j;
+		
+			t=pthread_create(&threads[i][j],NULL,exec_thread,(void *)&thread_data[i][j]);
+
 			if(t){
 				printf("ERROR; return code from pthread_create() is %d\n", t);
    			        exit(-1);
