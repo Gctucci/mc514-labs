@@ -1,8 +1,12 @@
 #include <pbm.h>
 
-/*
- * Função que transforma um vetor de bits em ints
- * (uso interno)
+/**
+ * Função que transforma uma matriz de bits em ints (uso interno)
+ * 
+ * @param bit Matriz de bits
+ * @param nlin Ponteiro para o número de linhas
+ * @param ncol Ponteiro para o número de colunas
+ * @param tab Ponteiro para a matriz de ints
  */
 void bit2int(bit **bit, int *nlin, int *ncol, int ***tab)
 {
@@ -24,8 +28,13 @@ void bit2int(bit **bit, int *nlin, int *ncol, int ***tab)
 	(*tab) = out;
 }
 
-/*
- * Função que lê uma imagem pgm e retorna uma matriz de mapa
+/**
+ * Função que lê uma imagem pgm e retorna uma matriz de ints
+ * 
+ * @param arq Caminho para o arquivo pbm
+ * @param tabuleiro Ponteiro para a matriz de ints
+ * @param nlin Ponteiro para o número de linhas
+ * @param ncol Ponteiro para o número de colunas
  */
 void pbm(char *arq, int ***tabuleiro, int *nlin, int *ncol)
 {
