@@ -66,7 +66,7 @@ int conta_celula(void *threadarg){
 	int col = dados->coluna_atual;
 	int tamlin = dados->tam_lin;
 	int tamcol=dados->tam_col;
-       
+
         if(lin -1 < 0){
                 lin=1;
         }
@@ -84,8 +84,9 @@ int conta_celula(void *threadarg){
 
         for(i=lin-1;i<=lin+1;i++){
                 for(j=col-1;j<=col+1;j++){
-                        if(&dados->tabuleiro[i][j] > 0){
+                        if(&dados->tabuleiro[i][j] != 0){
                                 soma++;
+				
                         }      
                 }
         }      
@@ -105,9 +106,31 @@ return soma;
 void *exec_thread(void *threadarg){
 
 	data *dados = (data*)threadarg;
+	int ** auxm = NULL;
+	int valida,lin,col;
 
+	lin=dados->linha_atual;
+	col=dados->coluna_atual;
+	valida = valida_celula(threadarg);
 
+	if(valida == VIVA){
+		dados->tabuleiro_pos[lin][col] = VIVA;
+		auxm = dados->tabuleiro;
+		dados->tabuleiro = dados->tabuleiro_pos;
+		dados->tabuleiro_pos = auxm;
+	}
 
+	else if(valida == MORTA){
+		if(dados->tabuleiro[lin][col] == VIVA){
+			dados->tabuleiro_pos[lin][col] = VIVA;
+			auxm = dados->tabuleiro;
+			dados->tabuleiro = dados->tabuleiro_pos;
+			dados->tabuleiro_pos = auxm;
+		}
+	
+	}
+	
+	
 }
 
 	/**
@@ -143,12 +166,12 @@ int main (int argc, char *argv[])
 	pthread_t** threads; /**ponteiro para uma matriz que guarda as threads (id)*/
 	data** thread_data; /**ponteiro para os dados que vao ser passados - um para cada thread*/
 	int ** pmatrix;     /**matriz auxiliar para criar um tabuleiro de próxima geração*/
-	
+	int **matriz;	    /**matriz com o tabuleiro da posição/geração atual*/
 	// Verifica se há parâmetros de linha de comando
 	if(argc>1)
-		pbm(argv[1], &pmatrix, &nlin, &ncol);
+		pbm(argv[1], &matriz, &nlin, &ncol);
 	else
-		pbm("./Gospers_glider_gun.pbm", &pmatrix, &nlin, &ncol);
+		pbm("./Gospers_glider_gun.pbm", &matriz, &nlin, &ncol);
 
 	
 	/**
@@ -169,7 +192,7 @@ int main (int argc, char *argv[])
 		for(j=0;j<ncol;j++){
 
 			/*Inicialização dos dados a serem passados para cada thread*/
-			thread_data[i][j].tabuleiro=pmatrix;
+			thread_data[i][j].tabuleiro=matriz;
 			thread_data[i][j].id[0] = i;
 			thread_data[i][j].id[1] = j;
 			thread_data[i][j].linha_atual = i;
@@ -186,8 +209,7 @@ int main (int argc, char *argv[])
 		}
 	}
 	
-	
-	imprime(nlin,ncol,pmatrix);
+		imprime(nlin,ncol,matriz);
 	
 	return 0;
 }
