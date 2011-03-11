@@ -1,12 +1,13 @@
-#include <netpbm/pbm.h>
+#include <pbm.h>
 
 /*
  * Função que transforma um vetor de bits em ints
  * (uso interno)
  */
-void bit2int(bit **bit, int *nlin, int *ncol, int **out)
+void bit2int(bit **bit, int *nlin, int *ncol, int ***tab)
 {
-	int i, j;
+	int i, j, **out;
+	
 	out = (int**) malloc(*nlin * sizeof(int*));
 	for(i=0; i<*nlin; i++)
 	{
@@ -19,12 +20,14 @@ void bit2int(bit **bit, int *nlin, int *ncol, int **out)
 				out[i][j] = 0;
 		}
 	}
+	
+	(*tab) = out;
 }
 
 /*
  * Função que lê uma imagem pgm e retorna uma matriz de mapa
  */
-void pbm(char *arq, int **tabuleiro, int *nlin, int *ncol)
+void pbm(char *arq, int ***tabuleiro, int *nlin, int *ncol)
 {
 	FILE *img;
 	bit **tab;
