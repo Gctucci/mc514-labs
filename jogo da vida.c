@@ -102,6 +102,24 @@ int main (){
 	data** thread_data;
 	int ** pmatrix;
 	
+
+/* TESTE */
+int **bla, nl, nc;
+pbm("./Gospers_glider_gun.pbm", &bla, &nl, &nc);
+for(i=0; i<nl; i++)
+{
+	for(j=0; j<nc; j++)
+		printf("%d ", bla[i][j]);
+	printf("\n");
+}
+
+
+
+
+
+
+
+
 	
 	/*Inicializaçao das estruturas, onde threads sao as threads disponiveis - uma para cada celula 
 	do tabuleiro -, thread_data é a estrutura a ser passada como argumento para a função que as 
