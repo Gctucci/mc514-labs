@@ -95,30 +95,18 @@ void *exec_thread(void *threadarg){
 
 }
 
-int main (){
-
+int main (int argc, char *argv[])
+{
 	int i,j,nlin=2,ncol=2,t;
 	pthread_t** threads;
 	data** thread_data;
 	int ** pmatrix;
 	
-
-/* TESTE */
-int **bla, nl, nc;
-pbm("./Gospers_glider_gun.pbm", &bla, &nl, &nc);
-for(i=0; i<nl; i++)
-{
-	for(j=0; j<nc; j++)
-		printf("%d ", bla[i][j]);
-	printf("\n");
-}
-
-
-
-
-
-
-
+	// Verifica se há parâmetros de linha de comando
+	if(argc>1)
+		pbm(argv[1], &pmatrix, &nlin, &ncol);
+	else
+		pbm("./Gospers_glider_gun.pbm", &pmatrix, &nlin, &ncol);
 
 	
 	/*Inicializaçao das estruturas, onde threads sao as threads disponiveis - uma para cada celula 
@@ -151,7 +139,23 @@ for(i=0; i<nl; i++)
 		}
 	}
 	
-return 0;
+	
+	// Imprime
+	for(i=0; i<nlin; i++)
+	{
+		for(j=0; j<ncol; j++)
+		{
+			if(pmatrix[i][j])
+				printf("# ");
+			else
+				printf("_ ");
+		}
+		printf("\n");
+	}
+	
+	printf("fim\n");
+	
+	return 0;
 }
 
 
