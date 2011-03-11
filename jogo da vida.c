@@ -2,21 +2,25 @@
 #include<stdlib.h>
 #include<ncurses.h>
 #include<pthread.h>
+
+#include"pbm.h"
+
 #define MORTA 0
 #define VIVA 1
 #define SUPERLOT 3
 #define SOLIDAO 2
 
-/*Estrutura de argumentos de uma thread, que possui um id unico, um ponteiro para o tabuleiro,
-a posicao da linha e coluna atuais e o tamanho do tabuleiro*/
+/**
+ * Estrutura de argumentos de uma thread
+ */
 typedef struct thread_data_structure {
 
-	int id[3];
-	int** tabuleiro;
-	int linha_atual;
-	int coluna_atual;
-	int tam_col;
-	int tam_lin;
+	int id[3];	    	/** id único */
+	int** tabuleiro;	/** ponteiro para o tabuleiro */
+	int linha_atual;	/** linha do pixel da thread */
+	int coluna_atual;	/** coluna do pixel da thread */
+	int tam_col;    	/** número de colunas do tabuleiro */
+	int tam_lin;    	/** número de linhas */
 
 } data;
 
@@ -48,8 +52,10 @@ int valida_celula(void*threadarg){
 }
 
 
-/*Função que conta as células adjacentes a uma célula de posição tabuleiro[linha][coluna].
-A função também trata os casos especiais (se a célula estudada estiver numa borda, por ex.).*/
+/**
+ * Função que conta as células adjacentes a uma célula de posição tabuleiro[linha][coluna].
+ * A função também trata os casos especiais (se a célula estudada estiver numa borda, por ex.).
+ */
 int conta_celula(void *threadarg){
 
 	data *dados = (data*)threadarg;
@@ -86,7 +92,9 @@ int conta_celula(void *threadarg){
 return soma;
 }
 
-/*função que a thread vai executar ao ser criada*/
+/*
+ * Função que a thread vai executar ao ser criada
+ */
 void *exec_thread(void *threadarg){
 
 	data *dados = (data*)threadarg;
@@ -109,9 +117,11 @@ int main (int argc, char *argv[])
 		pbm("./Gospers_glider_gun.pbm", &pmatrix, &nlin, &ncol);
 
 	
-	/*Inicializaçao das estruturas, onde threads sao as threads disponiveis - uma para cada celula 
-	do tabuleiro -, thread_data é a estrutura a ser passada como argumento para a função que as 
-	threads executam, e pmatrix é um tabuleiro auxiliar, que registra o proximo estado do jogo da vida*/ 
+	/**
+	 * Inicializaçao das estruturas, onde threads sao as threads disponiveis - uma para cada celula 
+	 * do tabuleiro -, thread_data é a estrutura a ser passada como argumento para a função que as 
+	 * threads executam, e pmatrix é um tabuleiro auxiliar, que registra o proximo estado do jogo da vida
+	 */ 
 	threads = (pthread_t **)malloc(nlin*sizeof(pthread_t*));
 	thread_data = (data **)malloc(nlin*sizeof(data*));
 	pmatrix = (int **)calloc(nlin,sizeof(int*));
@@ -140,7 +150,9 @@ int main (int argc, char *argv[])
 	}
 	
 	
-	// Imprime
+	/**
+	 *  Imprime
+	 */
 	for(i=0; i<nlin; i++)
 	{
 		for(j=0; j<ncol; j++)
