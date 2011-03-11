@@ -17,6 +17,7 @@ typedef struct thread_data_structure {
 
 	int id[3];	    	/** id único */
 	int** tabuleiro;	/** ponteiro para o tabuleiro */
+	int** tabuleiro_pos;    /** ponteiro para a próxima fase do tabuleiro*/
 	int linha_atual;	/** linha do pixel da thread */
 	int coluna_atual;	/** coluna do pixel da thread */
 	int tam_col;    	/** número de colunas do tabuleiro */
@@ -92,8 +93,14 @@ int conta_celula(void *threadarg){
 return soma;
 }
 
-/*
- * Função que a thread vai executar ao ser criada
+/**
+ * Função que a thread vai executar ao ser criada:
+ * A função verifica se a celula na qual a thread se encontra trabalhando
+ * deve sobreviver à próxima geração (ser escrita no próximo tabuleiro);
+ * Nesse caso, ela escreve na posição correspondente do pŕoximo tabuleiro
+ * o estado da célula (VIVA ou MORTA) e troca as posições dos tabuleiros:
+ * o tabuleiro de próxima geração passa a ser o atual, e o atual de próxima;
+ * 
  */
 void *exec_thread(void *threadarg){
 
@@ -103,12 +110,39 @@ void *exec_thread(void *threadarg){
 
 }
 
+	/**
+	 *  Imprime
+	 * @param nlin número de linhas do tabuleiro
+	 * @param ncol número de colunas do tabuleiro
+	 * @param pmatriz ponteiro para o tabuleiro em memória
+	 */
+void imprime(int nlin, int ncol, int** pmatrix)	{
+	int i,j;
+	initscr();
+	for(i=0; i<nlin; i++)
+	{
+		for(j=0; j<ncol; j++)
+		{
+			if(pmatrix[i][j])
+				printw("# ");
+			else
+				printw("_ ");
+		}
+		printw("\n");
+	}
+	
+	printw("fim\n");
+	refresh();
+	getch();
+	endwin();
+}
+
 int main (int argc, char *argv[])
 {
-	int i,j,nlin=2,ncol=2,t;
-	pthread_t** threads;
-	data** thread_data;
-	int ** pmatrix;
+	int i,j,nlin,ncol,t;
+	pthread_t** threads; /**ponteiro para uma matriz que guarda as threads (id)*/
+	data** thread_data; /**ponteiro para os dados que vao ser passados - um para cada thread*/
+	int ** pmatrix;     /**matriz auxiliar para criar um tabuleiro de próxima geração*/
 	
 	// Verifica se há parâmetros de linha de comando
 	if(argc>1)
@@ -127,18 +161,21 @@ int main (int argc, char *argv[])
 	pmatrix = (int **)calloc(nlin,sizeof(int*));
 
 	for(i=0;i<nlin;i++){
+		/*Alocação dinâmica da matriz de threadsm dos dados e do tabuleiro*/
 		threads[i]=(pthread_t*)malloc(ncol*sizeof(pthread_t));
 		thread_data[i]=(data*)malloc(ncol*sizeof(data));
 		pmatrix[i]=(int*)calloc(ncol,sizeof(int));
+
 		for(j=0;j<ncol;j++){
 
-			
+			/*Inicialização dos dados a serem passados para cada thread*/
 			thread_data[i][j].tabuleiro=pmatrix;
 			thread_data[i][j].id[0] = i;
 			thread_data[i][j].id[1] = j;
 			thread_data[i][j].linha_atual = i;
 			thread_data[i][j].coluna_atual = j;
-		
+			thread_data[i][j].tabuleiro_pos = pmatrix;
+			/*Criação das threads propriamente ditas*/
 			t=pthread_create(&threads[i][j],NULL,exec_thread,(void *)&thread_data[i][j]);
 
 			if(t){
@@ -150,22 +187,7 @@ int main (int argc, char *argv[])
 	}
 	
 	
-	/**
-	 *  Imprime
-	 */
-	for(i=0; i<nlin; i++)
-	{
-		for(j=0; j<ncol; j++)
-		{
-			if(pmatrix[i][j])
-				printf("# ");
-			else
-				printf("_ ");
-		}
-		printf("\n");
-	}
-	
-	printf("fim\n");
+	imprime(nlin,ncol,pmatrix);
 	
 	return 0;
 }
