@@ -20,10 +20,14 @@ typedef struct thread_data_structure {
 	int** tabuleiro_pos;    /** ponteiro para a próxima fase do tabuleiro*/
 	int linha_atual;	/** linha do pixel da thread */
 	int coluna_atual;	/** coluna do pixel da thread */
-	int tam_col;    	/** número de colunas do tabuleiro */
-	int tam_lin;    	/** número de linhas */
+	
 
 } data;
+
+/**Variaveis globais (compartilhadas pelas threads)*/
+int ** pmatrix;     /**matriz auxiliar para criar um tabuleiro de próxima geração*/
+int **matriz;	    /**matriz com o tabuleiro da posição/geração atual*/
+int nlin,ncol;
 
 int valida_celula(void*threadarg){
         //Indica a soma do numero de celulas vivas
@@ -64,8 +68,7 @@ int conta_celula(void *threadarg){
         int soma=0,i,j;
 	int lin = dados->linha_atual;
 	int col = dados->coluna_atual;
-	int tamlin = dados->tam_lin;
-	int tamcol=dados->tam_col;
+	
 
         if(lin -1 < 0){
                 lin=1;
@@ -75,16 +78,16 @@ int conta_celula(void *threadarg){
                 col=1;
         }
        
-        if(lin+1 >= tamlin){
-                lin=tamlin-1;
+        if(lin+1 >= nlin){
+                lin=nlin-1;
         }
-        if(col+1 >= tamcol){
-                col=tamcol-1;        
+        if(col+1 >= ncol){
+                col=ncol-1;        
         }
 
-        for(i=lin-1;i<=lin+1;i++){
-                for(j=col-1;j<=col+1;j++){
-                        if(&dados->tabuleiro[i][j] != 0){
+        for(i=lin-1;i<lin +1;i++){
+                for(j=col-1;j<col+1;j++){
+                        if(dados->tabuleiro[i][j] != 0){
                                 soma++;
 				
                         }      
@@ -135,18 +138,15 @@ void *exec_thread(void *threadarg){
 
 	/**
 	 *  Imprime
-	 * @param nlin número de linhas do tabuleiro
-	 * @param ncol número de colunas do tabuleiro
-	 * @param pmatriz ponteiro para o tabuleiro em memória
 	 */
-void imprime(int nlin, int ncol, int** pmatrix)	{
+void imprime()	{
 	int i,j;
 	initscr();
 	for(i=0; i<nlin; i++)
 	{
 		for(j=0; j<ncol; j++)
 		{
-			if(pmatrix[i][j])
+			if(matriz[i][j])
 				printw("# ");
 			else
 				printw("_ ");
@@ -162,11 +162,10 @@ void imprime(int nlin, int ncol, int** pmatrix)	{
 
 int main (int argc, char *argv[])
 {
-	int i,j,nlin,ncol,t;
+	int i,j,t;
 	pthread_t** threads; /**ponteiro para uma matriz que guarda as threads (id)*/
 	data** thread_data; /**ponteiro para os dados que vao ser passados - um para cada thread*/
-	int ** pmatrix;     /**matriz auxiliar para criar um tabuleiro de próxima geração*/
-	int **matriz;	    /**matriz com o tabuleiro da posição/geração atual*/
+	
 	// Verifica se há parâmetros de linha de comando
 	if(argc>1)
 		pbm(argv[1], &matriz, &nlin, &ncol);
@@ -208,8 +207,7 @@ int main (int argc, char *argv[])
 			}
 		}
 	}
-	
-		imprime(nlin,ncol,matriz);
+	imprime();
 	
 	return 0;
 }
