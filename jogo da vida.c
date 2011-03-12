@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<ncurses.h>
 #include<pthread.h>
+#include<time.h>
 
 #include"pbm.h"
 
@@ -135,13 +136,14 @@ void *exec_thread(void *threadarg){
 	
 	
 }
+int iter=0;
 
 	/**
 	 *  Imprime
 	 */
 void imprime()	{
+	clear();
 	int i,j;
-	initscr();
 	for(i=0; i<nlin; i++)
 	{
 		for(j=0; j<ncol; j++)
@@ -154,17 +156,19 @@ void imprime()	{
 		printw("\n");
 	}
 	
-	printw("fim\n");
+	printw("iter: %d\n", iter);
 	refresh();
-	getch();
-	endwin();
 }
 
 int main (int argc, char *argv[])
 {
 	int i,j,t;
-	pthread_t** threads; /**ponteiro para uma matriz que guarda as threads (id)*/
-	data** thread_data; /**ponteiro para os dados que vao ser passados - um para cada thread*/
+	pthread_t** threads;	/**ponteiro para uma matriz que guarda as threads (id)*/
+	data** thread_data;		/**ponteiro para os dados que vao ser passados - um para cada thread*/
+	clock_t t0=0, t1=0;    	/**variáveis para controle do tempo*/
+	double fps=1.5;  		/**frames por segundo*/
+	int sair=0;
+	char c;
 	
 	// Verifica se há parâmetros de linha de comando
 	if(argc>1)
@@ -172,6 +176,8 @@ int main (int argc, char *argv[])
 	else
 		pbm("./Gospers_glider_gun.pbm", &matriz, &nlin, &ncol);
 
+	/** Inicializa a ncurses */
+	initscr(); cbreak(); noecho(); noraw(); timeout(0);
 	
 	/**
 	 * Inicializaçao das estruturas, onde threads sao as threads disponiveis - uma para cada celula 
@@ -207,8 +213,31 @@ int main (int argc, char *argv[])
 			}
 		}
 	}
-	imprime();
 	
+	t0 = clock(); // Inicializa o cronometro
+	do
+	{
+		t1 = clock();
+		/* Se já deu o tempo, roda mais uma iteração do jogo */
+		if( (t1 - t0)/(double)CLOCKS_PER_SEC > 1.0/fps )
+		{
+			/**
+			 *  CODIGO A CADA ITERACAO 
+			 */
+			imprime();
+			iter++;
+			
+			// Passa pro proximo frame
+			t0 = t1;	
+		}
+		/* Verifica se é pra sair */
+		c = getch();
+		if(c!=10) sair=1;
+	} while(!sair);
+	
+	
+	getch();
+	endwin();
 	return 0;
 }
 
