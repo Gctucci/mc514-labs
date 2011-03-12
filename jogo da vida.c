@@ -15,87 +15,71 @@
  * Estrutura de argumentos de uma thread
  */
 typedef struct thread_data_structure {
-
 	int id[3];	    	/** id único */
-	int** tabuleiro;	/** ponteiro para o tabuleiro */
-	int** tabuleiro_pos;    /** ponteiro para a próxima fase do tabuleiro*/
 	int linha_atual;	/** linha do pixel da thread */
 	int coluna_atual;	/** coluna do pixel da thread */
-	
-
 } data;
 
 /**Variaveis globais (compartilhadas pelas threads)*/
-int ** pmatrix;     /**matriz auxiliar para criar um tabuleiro de próxima geração*/
-int **matriz;	    /**matriz com o tabuleiro da posição/geração atual*/
-int nlin,ncol;
+int **matriz;	    	/** matriz com o tabuleiro da posição/geração atual */
+int **matriz_prox;  	/** matriz auxiliar para criar um tabuleiro de próxima geração */
+int nlin,ncol;	    	/** número de linhas e colunas do tabuleiro */
+int iter=0;         	/** número de iterações do jogo da vida */
 
-int valida_celula(void*threadarg){
-        //Indica a soma do numero de celulas vivas
-        int num_viva;
-       	data* dados = (data*)threadarg;
 
-        if(&dados->tabuleiro !=NULL){
-                num_viva = conta_celula(threadarg);
-                /*Caso o numero de celulas vizinhas seja maior que tres ou menor
-                que dois, a celula morre por superlotação/solidão. Senão, ela sobrevive
-                para a proxima geração*/
-                if(num_viva > SUPERLOT || num_viva < SOLIDAO){
-                        return MORTA;
-                }
-                else{
-                        return VIVA;
-                }
-		
+/**
+ * Verifica se uma célula da matriz atual estará viva no próximo turno
+ * 
+ * @param lin Linha da célula
+ * @param col Coluna da célula
+ */
+int valida_celula(int lin, int col){
+	int num_viva; /** Indica a soma do numero de celulas vivas */
 
-        }
+	if(matriz !=NULL){
+		num_viva = conta_celula(lin, col);
+		/**
+		 * Caso o numero de celulas vizinhas seja maior que tres ou menor
+		 * que dois, a celula morre por superlotação/solidão. Senão, ela sobrevive
+		 * para a proxima geração
+		 */
+		if(num_viva > SUPERLOT || num_viva < SOLIDAO)
+			return MORTA;
+		else
+			return VIVA;
+	}
 	else{
 		printf("ERROR; the original file is absent or corrupted.");
-   		exit(-1);
-
+		exit(-1);
 	}
-       
 }
-
 
 /**
  * Função que conta as células adjacentes a uma célula de posição tabuleiro[linha][coluna].
  * A função também trata os casos especiais (se a célula estudada estiver numa borda, por ex.).
+ * 
+ * @param lin Linha da célula
+ * @param col Coluna da célula
  */
-int conta_celula(void *threadarg){
+int conta_celula(int lin, int col){
+	int soma=0,i,j;
 
-	data *dados = (data*)threadarg;
-       
-        int soma=0,i,j;
-	int lin = dados->linha_atual;
-	int col = dados->coluna_atual;
+	/** Limites da linha */
+	if(lin-1 < 0) lin=1;
+	if(lin+1 >= nlin) lin=nlin-1;
+
+	/** Limites da coluna */
+	if(col-1 < 0) col=1;
+	if(col+1 >= ncol) col=ncol-1;
+
+	for(i=lin-1;i<lin +1;i++){
+		for(j=col-1;j<col+1;j++){
+			if(matriz[i][j] != 0)
+				soma++;
+		}
+	}
 	
-
-        if(lin -1 < 0){
-                lin=1;
-        }
-
-        if(col-1 < 0){
-                col=1;
-        }
-       
-        if(lin+1 >= nlin){
-                lin=nlin-1;
-        }
-        if(col+1 >= ncol){
-                col=ncol-1;        
-        }
-
-        for(i=lin-1;i<lin +1;i++){
-                for(j=col-1;j<col+1;j++){
-                        if(dados->tabuleiro[i][j] != 0){
-                                soma++;
-				
-                        }      
-                }
-        }      
-
-return soma;
+	return soma;
 }
 
 /**
@@ -103,9 +87,9 @@ return soma;
  * A função verifica se a celula na qual a thread se encontra trabalhando
  * deve sobreviver à próxima geração (ser escrita no próximo tabuleiro);
  * Nesse caso, ela escreve na posição correspondente do pŕoximo tabuleiro
- * o estado da célula (VIVA ou MORTA) e troca as posições dos tabuleiros:
- * o tabuleiro de próxima geração passa a ser o atual, e o atual de próxima;
+ * o estado da célula (VIVA ou MORTA)
  * 
+ * @param threadarg Ponteiro void para a struct de parâmetros para a thread
  */
 void *exec_thread(void *threadarg){
 
@@ -115,32 +99,19 @@ void *exec_thread(void *threadarg){
 
 	lin=dados->linha_atual;
 	col=dados->coluna_atual;
-	valida = valida_celula(threadarg);
+	valida = valida_celula(lin, col);
 
 	if(valida == VIVA){
-		dados->tabuleiro_pos[lin][col] = VIVA;
-		auxm = dados->tabuleiro;
-		dados->tabuleiro = dados->tabuleiro_pos;
-		dados->tabuleiro_pos = auxm;
+		matriz_prox[lin][col] = VIVA;
 	}
-
 	else if(valida == MORTA){
-		if(dados->tabuleiro[lin][col] == VIVA){
-			dados->tabuleiro_pos[lin][col] = VIVA;
-			auxm = dados->tabuleiro;
-			dados->tabuleiro = dados->tabuleiro_pos;
-			dados->tabuleiro_pos = auxm;
-		}
-	
+		matriz_prox[lin][col] = MORTA;
 	}
-	
-	
 }
-int iter=0;
 
-	/**
-	 *  Imprime
-	 */
+/**
+ *  Imprime o tabuleiro atual
+ */
 void imprime()	{
 	clear();
 	int i,j;
@@ -160,59 +131,64 @@ void imprime()	{
 	refresh();
 }
 
+/**
+ * Função main
+ */
 int main (int argc, char *argv[])
 {
 	int i,j,t;
 	pthread_t** threads;	/**ponteiro para uma matriz que guarda as threads (id)*/
 	data** thread_data;		/**ponteiro para os dados que vao ser passados - um para cada thread*/
+	int **matriz_tmp;		/**ponteiro auxiliar para a troca entre as matrizes*/
 	clock_t t0=0, t1=0;    	/**variáveis para controle do tempo*/
 	double fps=1.5;  		/**frames por segundo*/
-	int sair=0;
+	int sair=0;         	/**variável que verifica se é para sair ou não do programa*/
 	char c;
+	void *status;
+	int rc;
 	
-	// Verifica se há parâmetros de linha de comando
+	/**
+	 * Verifica se há parâmetros de linha de comando e lê a figura inicial
+	 */
 	if(argc>1)
 		pbm(argv[1], &matriz, &nlin, &ncol);
 	else
 		pbm("./Gospers_glider_gun.pbm", &matriz, &nlin, &ncol);
+	
+	/** Aloca a matriz da próxima posição */
+	matriz_prox = (int **)calloc(nlin,sizeof(int*));
+	for(i=0;i<nlin;i++)
+		matriz_prox[i]=(int*)calloc(ncol,sizeof(int));
 
-	/** Inicializa a ncurses */
-	initscr(); cbreak(); noecho(); noraw(); timeout(0);
 	
 	/**
 	 * Inicializaçao das estruturas, onde threads sao as threads disponiveis - uma para cada celula 
 	 * do tabuleiro -, thread_data é a estrutura a ser passada como argumento para a função que as 
-	 * threads executam, e pmatrix é um tabuleiro auxiliar, que registra o proximo estado do jogo da vida
+	 * threads executam
 	 */ 
 	threads = (pthread_t **)malloc(nlin*sizeof(pthread_t*));
 	thread_data = (data **)malloc(nlin*sizeof(data*));
-	pmatrix = (int **)calloc(nlin,sizeof(int*));
 
 	for(i=0;i<nlin;i++){
-		/*Alocação dinâmica da matriz de threadsm dos dados e do tabuleiro*/
+		/**
+		 * Alocação dinâmica da matriz de threads
+		 */
 		threads[i]=(pthread_t*)malloc(ncol*sizeof(pthread_t));
 		thread_data[i]=(data*)malloc(ncol*sizeof(data));
-		pmatrix[i]=(int*)calloc(ncol,sizeof(int));
 
 		for(j=0;j<ncol;j++){
-
-			/*Inicialização dos dados a serem passados para cada thread*/
-			thread_data[i][j].tabuleiro=matriz;
+			/**
+			 * Inicialização dos dados a serem passados para cada thread
+			 */
 			thread_data[i][j].id[0] = i;
 			thread_data[i][j].id[1] = j;
 			thread_data[i][j].linha_atual = i;
 			thread_data[i][j].coluna_atual = j;
-			thread_data[i][j].tabuleiro_pos = pmatrix;
-			/*Criação das threads propriamente ditas*/
-			t=pthread_create(&threads[i][j],NULL,exec_thread,(void *)&thread_data[i][j]);
-
-			if(t){
-				printf("ERROR; return code from pthread_create() is %d\n", t);
-   			        exit(-1);
-
-			}
 		}
 	}
+	
+	/** Inicializa a ncurses */
+	initscr(); cbreak(); noecho(); noraw(); timeout(0);
 	
 	t0 = clock(); // Inicializa o cronometro
 	do
@@ -224,10 +200,39 @@ int main (int argc, char *argv[])
 			/**
 			 *  CODIGO A CADA ITERACAO 
 			 */
-			imprime();
-			iter++;
+			/** Modifica o próximo tabuleiro */
+			for(i=0;i<nlin;i++){
+				for(j=0;j<ncol;j++){
+					t=pthread_create(&threads[i][j],NULL,exec_thread,(void *)&thread_data[i][j]);
+
+					if(t){
+						printf("ERROR; return code from pthread_create() is %d\n", t);
+						exit(-1);
+					}
+				}
+			}
 			
-			// Passa pro proximo frame
+			/** Espera as threads morrerem */
+			for(i=0;i<nlin;i++){
+				for(j=0;j<ncol;j++){
+					rc = pthread_join(threads[i][j], &status);
+					if (rc) {
+						printf("ERROR; return code from pthread_join() is %d\n", rc);
+						exit(-1);
+					}
+					printf("Main: completed join with thread %ld having a status of %ld\n",t,(long)status);
+				}
+			}
+			
+			imprime();	/** Imprime */
+			iter++; 	/** Incrementa o contador de iterações */
+			
+			/** Realiza a troca entre as matrizes */
+			matriz_tmp = matriz;
+			matriz = matriz_prox;
+			matriz_prox = matriz_tmp;
+			
+			/** Passa para o proximo frame */
 			t0 = t1;	
 		}
 		/* Verifica se é pra sair */
@@ -235,10 +240,8 @@ int main (int argc, char *argv[])
 		if(c!=10) sair=1;
 	} while(!sair);
 	
+	endwin();	/** Finaliza a ncurses */
 	
-	getch();
-	endwin();
 	return 0;
 }
-
 
