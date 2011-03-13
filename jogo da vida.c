@@ -36,8 +36,9 @@ int iter=0;         	/** número de iterações do jogo da vida */
 int valida_celula(int lin, int col){
 	int num_viva; /** Indica a soma do numero de celulas vivas */
 
-	if(matriz !=NULL){
-		num_viva = conta_celula(lin, col);
+	num_viva = conta_celula(lin, col);
+	if(matriz[lin][col] == VIVA)
+	{
 		/**
 		 * Caso o numero de celulas vizinhas seja maior que tres ou menor
 		 * que dois, a celula morre por superlotação/solidão. Senão, ela sobrevive
@@ -45,12 +46,15 @@ int valida_celula(int lin, int col){
 		 */
 		if(num_viva > SUPERLOT || num_viva < SOLIDAO)
 			return MORTA;
-		else if(num_viva == 2 || num_viva ==3)
+		else
 			return VIVA;
 	}
-	else{
-		printf("ERROR; the original file is absent or corrupted.");
-		exit(-1);
+	if(matriz[lin][col] == MORTA)
+	{
+		if(num_viva == 3)
+			return VIVA; // renasce
+		else
+			return MORTA;
 	}
 }
 
@@ -63,23 +67,7 @@ int valida_celula(int lin, int col){
  */
 int conta_celula(int lin, int col){
 	int soma=0,i,j;
-/*
-	int alin=lin,acol=col;
-	** Limites da linha *
-	if(lin-1 < 0) lin=1;
-	if(lin+2 > nlin) lin=nlin-1;
-
-	** Limites da coluna *
-	if(col-1 < 0) col=1;
-	if(col+2 > ncol) col=ncol-1;
-
-	for(i=lin-1;i<lin +2;i++){
-		for(j=col-1;j<col+2;j++){
-			if(matriz[i][j] != 0 && !matriz[alin][acol])
-				soma++;
-		}
-	}
-	*/
+	
 	for(i=lin-1; i<lin+2; i++){
 		if( (i >= 0) && (i < nlin) ) {
 		
@@ -94,8 +82,7 @@ int conta_celula(int lin, int col){
 			}
 		}
 	}
-
-
+	
 	return soma;
 }
 
@@ -152,7 +139,6 @@ void imprime()	{
  *  Imprime as somas do tabuleiro atual (debug)
  */
 void imprime_soma()	{
-	//clear();
 	printw("\n\n");
 	int i,j;
 	for(i=0; i<nlin; i++)
@@ -177,7 +163,7 @@ int main (int argc, char *argv[])
 	data** thread_data;		/**ponteiro para os dados que vao ser passados - um para cada thread*/
 	int **matriz_tmp;		/**ponteiro auxiliar para a troca entre as matrizes*/
 	clock_t t0=0, t1=0;    	/**variáveis para controle do tempo*/
-	double fps=0.2;  		/**frames por segundo*/
+	double fps=1.0;  		/**frames por segundo*/
 	int sair=0;         	/**variável que verifica se é para sair ou não do programa*/
 	char c;
 	void *status;
