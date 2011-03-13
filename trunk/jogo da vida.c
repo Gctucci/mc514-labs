@@ -12,6 +12,7 @@
 #define SOLIDAO 2
 #define FPS 1.0
 #define CHAR 10
+#define MAXTHREADS 30
 
 /**
  * Estrutura de argumentos de uma thread
@@ -156,6 +157,60 @@ void imprime_soma()	{
 }
 
 /**
+ * Processa uma certa área da matriz
+ * 
+ * @param lin_0 Linha inicial
+ * @param lin_1 Linha final
+ * @param col_0 Coluna inicial
+ * @param col_1 Coluna final
+ */
+processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threads, data** thread_data)
+{
+	int i, j, t;
+	void *status;
+	int rc;
+	int lin_meio, col_meio;
+	
+	/** Verifica a área a ser tratada */
+	if( (col_1-col_0)*(lin_1-lin_0) > MAXTHREADS)
+	{
+		lin_meio = (lin_1+lin_0)/2;
+		col_meio = (col_1+col_0)/2;
+		
+		processa_area(lin_0, lin_meio, col_0, col_meio, threads, thread_data);
+		processa_area(lin_meio, lin_1, col_0, col_meio, threads, thread_data);
+		
+		processa_area(lin_0, lin_meio, col_meio, col_1, threads, thread_data);
+		processa_area(lin_meio, lin_1, col_meio, col_1, threads, thread_data);
+	}
+	else
+	{
+		/** Modifica o próximo tabuleiro */
+		for(i=lin_0; i<lin_1; i++){
+			for(j=col_0; j<col_1; j++){
+				t=pthread_create(&threads[i][j],NULL,exec_thread,(void *)&thread_data[i][j]);
+
+				if(t){
+					printf("ERROR; return code from pthread_create() is %d\n", t);
+					exit(-1);
+				}
+			}
+		}
+
+		/** Espera as threads morrerem */
+		for(i=lin_0; i<lin_1; i++){
+			for(j=col_0; j<col_1; j++){
+				rc = pthread_join(threads[i][j], &status);
+				if (rc) {
+					printf("ERROR; return code from pthread_join() is %d\n", rc);
+					exit(-1);
+				}
+			}
+		}
+	}
+}
+
+/**
  * Função main
  */
 int main (int argc, char *argv[])
@@ -165,7 +220,6 @@ int main (int argc, char *argv[])
 	data** thread_data;		/**ponteiro para os dados que vao ser passados - um para cada thread*/
 	int **matriz_tmp;		/**ponteiro auxiliar para a troca entre as matrizes*/
 	clock_t t0=0, t1=0;    	/**variáveis para controle do tempo*/
-	double fps=1.0;  		/**frames por segundo*/
 	int sair=0;         	/**variável que verifica se é para sair ou não do programa*/
 	char c;
 	void *status;
@@ -219,37 +273,13 @@ int main (int argc, char *argv[])
 	{
 		t1 = clock();
 		/* Se já deu o tempo, roda mais uma iteração do jogo */
-		if( (t1 - t0)/(double)CLOCKS_PER_SEC > FPS/fps )
+		if( (t1 - t0)/(double)CLOCKS_PER_SEC > 1.0/FPS )
 		{
-			/**
-			 *  CODIGO A CADA ITERACAO 
-			 */
 			/** Modifica o próximo tabuleiro */
-			for(i=0;i<nlin;i++){
-				for(j=0;j<ncol;j++){
-					t=pthread_create(&threads[i][j],NULL,exec_thread,(void *)&thread_data[i][j]);
-
-					if(t){
-						printf("ERROR; return code from pthread_create() is %d\n", t);
-						exit(-1);
-					}
-				}
-			}
-			
-			/** Espera as threads morrerem */
-			for(i=0;i<nlin;i++){
-				for(j=0;j<ncol;j++){
-					rc = pthread_join(threads[i][j], &status);
-					if (rc) {
-						printf("ERROR; return code from pthread_join() is %d\n", rc);
-						exit(-1);
-					}
-					
-				}
-			}
+			processa_area(0, nlin, 0, ncol, threads, thread_data);
 			
 			imprime();	/** Imprime */
-			imprime_soma();
+			//imprime_soma();
 			iter++; 	/** Incrementa o contador de iterações */
 			
 			/** Realiza a troca entre as matrizes */
