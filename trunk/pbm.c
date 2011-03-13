@@ -49,6 +49,7 @@ void pbm(char *arq, int ***tabuleiro, int *nlin, int *ncol)
 		bit2int(tab, nlin, ncol, tabuleiro);
 		
 		pbm_freearray(tab, *nlin);
+		fclose(img);
 		return;
 	}
 	else

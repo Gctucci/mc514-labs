@@ -157,6 +157,8 @@ void imprime_soma()	{
  * @param lin_1 Linha final
  * @param col_0 Coluna inicial
  * @param col_1 Coluna final
+ * @param threads Matriz de threads
+ * @param thread_data Matriz de dados das threads
  */
 void processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threads, data** thread_data)
 {
@@ -304,6 +306,22 @@ int main (int argc, char *argv[])
 	} while(!sair);
 	
 	endwin();	/** Finaliza a ncurses */
+	
+	/**
+	 * Libera a memória utilizada
+	 * obs: A biblioteca ncurses causa alguns leaks intencionais.
+	 */
+	for(i=0; i<nlin; i++)
+	{
+		free(threads[i]);
+		free(thread_data[i]);
+		free(matriz[i]);
+		free(matriz_prox[i]);
+	}
+	free(threads);
+	free(thread_data);
+	free(matriz);
+	free(matriz_prox);
 	
 	return 0;
 }
