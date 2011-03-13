@@ -10,7 +10,7 @@
 #define VIVA 1
 #define SUPERLOT 3
 #define SOLIDAO 2
-
+#define FPS 1.0
 /**
  * Estrutura de argumentos de uma thread
  */
@@ -217,7 +217,7 @@ int main (int argc, char *argv[])
 	{
 		t1 = clock();
 		/* Se já deu o tempo, roda mais uma iteração do jogo */
-		if( (t1 - t0)/(double)CLOCKS_PER_SEC > 1.0/fps )
+		if( (t1 - t0)/(double)CLOCKS_PER_SEC > FPS/fps )
 		{
 			/**
 			 *  CODIGO A CADA ITERACAO 
@@ -239,10 +239,10 @@ int main (int argc, char *argv[])
 				for(j=0;j<ncol;j++){
 					rc = pthread_join(threads[i][j], &status);
 					if (rc) {
-						printf("ERROR; return code from pthread_join() is %d\n", rc);
+						printw("ERROR; return code from pthread_join() is %d\n", rc);
 						exit(-1);
 					}
-					printf("Main: completed join with thread %ld having a status of %ld\n",t,(long)status);
+					
 				}
 			}
 			
