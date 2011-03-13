@@ -10,9 +10,9 @@
 #define VIVA 1
 #define SUPERLOT 3
 #define SOLIDAO 2
-#define FPS 1.0
+#define FPS 3.0
 #define CHAR 10
-#define MAXTHREADS 30
+#define MAXTHREADS 300
 
 /**
  * Estrutura de argumentos de uma thread
@@ -75,7 +75,7 @@ int conta_celula(int lin, int col){
 		if( (i >= 0) && (i < nlin) ) {
 		
 			for(j=col-1;j<col+2;j++){
-				if( (j >= 0) && (j < nlin) ){
+				if( (j >= 0) && (j < ncol) ){
 				
 					if( !((i==lin) && (j==col)) ){
 						if(matriz[i][j] == VIVA)
@@ -106,14 +106,8 @@ void *exec_thread(void *threadarg){
 
 	lin=dados->linha_atual;
 	col=dados->coluna_atual;
-	valida = valida_celula(lin, col);
-
-	if(valida == VIVA){
-		matriz_prox[lin][col] = VIVA;
-	}
-	else if(valida == MORTA){
-		matriz_prox[lin][col] = MORTA;
-	}
+	
+	matriz_prox[lin][col] = valida_celula(lin, col);
 }
 
 /**
@@ -164,7 +158,7 @@ void imprime_soma()	{
  * @param col_0 Coluna inicial
  * @param col_1 Coluna final
  */
-processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threads, data** thread_data)
+void processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threads, data** thread_data)
 {
 	int i, j, t;
 	void *status;
@@ -208,6 +202,19 @@ processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threads, d
 			}
 		}
 	}
+}
+
+/**
+ * Processa a matriz sem usar threads (debug)
+ */
+void processa_sem_threads()
+{
+	int valida, i, j;
+	for(i=0;i<nlin;i++){
+		for(j=0;j<ncol;j++){
+			matriz_prox[i][j] = valida_celula(i, j);
+		}
+	}	
 }
 
 /**
@@ -277,6 +284,7 @@ int main (int argc, char *argv[])
 		{
 			/** Modifica o próximo tabuleiro */
 			processa_area(0, nlin, 0, ncol, threads, thread_data);
+			//processa_sem_threads();
 			
 			imprime();	/** Imprime */
 			//imprime_soma();
