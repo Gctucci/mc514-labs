@@ -6,11 +6,13 @@
 
 #include"pbm.h"
 
-#define MORTA 0
+#define MORTA 0 
 #define VIVA 1
 #define SUPERLOT 3
 #define SOLIDAO 2
 #define FPS 1.0
+#define CHAR 10
+
 /**
  * Estrutura de argumentos de uma thread
  */
@@ -239,7 +241,7 @@ int main (int argc, char *argv[])
 				for(j=0;j<ncol;j++){
 					rc = pthread_join(threads[i][j], &status);
 					if (rc) {
-						printw("ERROR; return code from pthread_join() is %d\n", rc);
+						printf("ERROR; return code from pthread_join() is %d\n", rc);
 						exit(-1);
 					}
 					
@@ -260,7 +262,7 @@ int main (int argc, char *argv[])
 		}
 		/* Verifica se é pra sair */
 		c = getch();
-		if(c!=10) sair=1;
+		if(c!=CHAR) sair=1;
 	} while(!sair);
 	
 	endwin();	/** Finaliza a ncurses */
