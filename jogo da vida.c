@@ -45,7 +45,7 @@ int valida_celula(int lin, int col){
 		 */
 		if(num_viva > SUPERLOT || num_viva < SOLIDAO)
 			return MORTA;
-		else
+		else if(num_viva == 2 || num_viva ==3)
 			return VIVA;
 	}
 	else{
@@ -63,7 +63,7 @@ int valida_celula(int lin, int col){
  */
 int conta_celula(int lin, int col){
 	int soma=0,i,j;
-
+	int alin=lin,acol=col;
 	/** Limites da linha */
 	if(lin-1 < 0) lin=1;
 	if(lin+1 >= nlin) lin=nlin-1;
@@ -74,7 +74,7 @@ int conta_celula(int lin, int col){
 
 	for(i=lin-1;i<lin +1;i++){
 		for(j=col-1;j<col+1;j++){
-			if(matriz[i][j] != 0)
+			if(matriz[i][j] != 0 && !matriz[alin][acol])
 				soma++;
 		}
 	}
