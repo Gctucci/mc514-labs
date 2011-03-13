@@ -63,22 +63,39 @@ int valida_celula(int lin, int col){
  */
 int conta_celula(int lin, int col){
 	int soma=0,i,j;
+/*
 	int alin=lin,acol=col;
-	/** Limites da linha */
+	** Limites da linha *
 	if(lin-1 < 0) lin=1;
-	if(lin+1 >= nlin) lin=nlin-1;
+	if(lin+2 > nlin) lin=nlin-1;
 
-	/** Limites da coluna */
+	** Limites da coluna *
 	if(col-1 < 0) col=1;
-	if(col+1 >= ncol) col=ncol-1;
+	if(col+2 > ncol) col=ncol-1;
 
-	for(i=lin-1;i<lin +1;i++){
-		for(j=col-1;j<col+1;j++){
+	for(i=lin-1;i<lin +2;i++){
+		for(j=col-1;j<col+2;j++){
 			if(matriz[i][j] != 0 && !matriz[alin][acol])
 				soma++;
 		}
 	}
-	
+	*/
+	for(i=lin-1; i<lin+2; i++){
+		if( (i >= 0) && (i < nlin) ) {
+		
+			for(j=col-1;j<col+2;j++){
+				if( (j >= 0) && (j < nlin) ){
+				
+					if( !((i==lin) && (j==col)) ){
+						if(matriz[i][j] == VIVA)
+							soma++;
+					}
+				}
+			}
+		}
+	}
+
+
 	return soma;
 }
 
@@ -132,6 +149,25 @@ void imprime()	{
 }
 
 /**
+ *  Imprime as somas do tabuleiro atual (debug)
+ */
+void imprime_soma()	{
+	//clear();
+	printw("\n\n");
+	int i,j;
+	for(i=0; i<nlin; i++)
+	{
+		for(j=0; j<ncol; j++)
+		{
+			printw("%d ", conta_celula(i, j));
+		}
+		printw("\n");
+	}	
+
+	refresh();
+}
+
+/**
  * Função main
  */
 int main (int argc, char *argv[])
@@ -141,7 +177,7 @@ int main (int argc, char *argv[])
 	data** thread_data;		/**ponteiro para os dados que vao ser passados - um para cada thread*/
 	int **matriz_tmp;		/**ponteiro auxiliar para a troca entre as matrizes*/
 	clock_t t0=0, t1=0;    	/**variáveis para controle do tempo*/
-	double fps=1.5;  		/**frames por segundo*/
+	double fps=0.2;  		/**frames por segundo*/
 	int sair=0;         	/**variável que verifica se é para sair ou não do programa*/
 	char c;
 	void *status;
@@ -225,6 +261,7 @@ int main (int argc, char *argv[])
 			}
 			
 			imprime();	/** Imprime */
+			imprime_soma();
 			iter++; 	/** Incrementa o contador de iterações */
 			
 			/** Realiza a troca entre as matrizes */
