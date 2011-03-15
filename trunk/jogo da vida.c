@@ -1,34 +1,4 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<ncurses.h>
-#include<pthread.h>
-#include<time.h>
-
-#include"pbm.h"
-
-#define MORTA 0 
-#define VIVA 1
-#define SUPERLOT 3
-#define SOLIDAO 2
-#define FPS 3.0
-#define CHAR 10
-#define MAXTHREADS 300
-
-/**
- * Estrutura de argumentos de uma thread
- */
-typedef struct thread_data_structure {
-	int id[3];	    	/** id único */
-	int linha_atual;	/** linha do pixel da thread */
-	int coluna_atual;	/** coluna do pixel da thread */
-} data;
-
-/**Variaveis globais (compartilhadas pelas threads)*/
-int **matriz;	    	/** matriz com o tabuleiro da posição/geração atual */
-int **matriz_prox;  	/** matriz auxiliar para criar um tabuleiro de próxima geração */
-int nlin,ncol;	    	/** número de linhas e colunas do tabuleiro */
-int iter=0;         	/** número de iterações do jogo da vida */
-
+#include "jogo da vida.h"
 
 /**
  * Verifica se uma célula da matriz atual estará viva no próximo turno
@@ -129,6 +99,7 @@ void imprime()	{
 	}
 	
 	printw("iter: %d\n", iter);
+	printw("Pressione qualquer tecla para sair.\n");
 	refresh();
 }
 
@@ -151,8 +122,9 @@ void imprime_soma()	{
 }
 
 /**
- * Processa uma certa área da matriz
- * 
+ * Processa uma certa área da matriz.
+ * Divide a imagem recursivamente em quatro partes
+ *
  * @param lin_0 Linha inicial
  * @param lin_1 Linha final
  * @param col_0 Coluna inicial
@@ -187,7 +159,7 @@ void processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threa
 				t=pthread_create(&threads[i][j],NULL,exec_thread,(void *)&thread_data[i][j]);
 
 				if(t){
-					printf("ERROR; return code from pthread_create() is %d\n", t);
+					printf("ERRO; codigo de retorno de pthread_create() is %d\n", t);
 					exit(-1);
 				}
 			}
@@ -198,7 +170,7 @@ void processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threa
 			for(j=col_0; j<col_1; j++){
 				rc = pthread_join(threads[i][j], &status);
 				if (rc) {
-					printf("ERROR; return code from pthread_join() is %d\n", rc);
+					printf("ERRO; codigo de retorno de pthread_join() is %d\n", rc);
 					exit(-1);
 				}
 			}
@@ -240,7 +212,11 @@ int main (int argc, char *argv[])
 	if(argc>1)
 		pbm(argv[1], &matriz, &nlin, &ncol);
 	else
-		pbm("./Gospers_glider_gun.pbm", &matriz, &nlin, &ncol);
+	{
+		printf("Modo de uso:\n\t./life [arquivo de entrada]\n");
+		printf("Exemplo de execucao: ./life pulsar.pbm\n");
+		return 0;
+	}
 	
 	/** Aloca a matriz da próxima posição */
 	matriz_prox = (int **)calloc(nlin,sizeof(int*));
@@ -286,7 +262,7 @@ int main (int argc, char *argv[])
 		{
 			/** Modifica o próximo tabuleiro */
 			processa_area(0, nlin, 0, ncol, threads, thread_data);
-			//processa_sem_threads();
+			//processa_sem_threads(); //Descomentar para fins de depuração 
 			
 			imprime();	/** Imprime */
 			//imprime_soma();
