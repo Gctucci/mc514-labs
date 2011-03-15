@@ -28,6 +28,7 @@ int **matriz;	    	/** matriz com o tabuleiro da posição/geração atual */
 int **matriz_prox;  	/** matriz auxiliar para criar um tabuleiro de próxima geração */
 int nlin,ncol;	    	/** número de linhas e colunas do tabuleiro */
 int iter=0;         	/** número de iterações do jogo da vida */
+float fps = FPS;	/** número de frames por segundo */
 
 /**
  * Verifica se uma célula da matriz atual estará viva no próximo turno

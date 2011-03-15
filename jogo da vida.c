@@ -98,7 +98,8 @@ void imprime()	{
 		printw("\n");
 	}
 	
-	printw("iter: %d\n", iter);
+	printw("iter: \t%d\n", iter);
+	printw("fps: \t%.1f\n", fps);
 	printw("Pressione qualquer tecla para sair.\n");
 	refresh();
 }
@@ -213,10 +214,13 @@ int main (int argc, char *argv[])
 		pbm(argv[1], &matriz, &nlin, &ncol);
 	else
 	{
-		printf("Modo de uso:\n\t./life [arquivo de entrada]\n");
+		printf("Modo de uso:\n\t./life [arquivo de entrada] [frames por segundo(opcional)]\n");
 		printf("Exemplo de execucao: ./life pulsar.pbm\n");
 		return 0;
 	}
+	
+	if(argc>2)
+		sscanf(argv[2], "%f", &fps);
 	
 	/** Aloca a matriz da próxima posição */
 	matriz_prox = (int **)calloc(nlin,sizeof(int*));
@@ -258,7 +262,7 @@ int main (int argc, char *argv[])
 	{
 		t1 = clock();
 		/* Se já deu o tempo, roda mais uma iteração do jogo */
-		if( (t1 - t0)/(double)CLOCKS_PER_SEC > 1.0/FPS )
+		if( (t1 - t0)/(double)CLOCKS_PER_SEC > 1.0/fps )
 		{
 			/** Modifica o próximo tabuleiro */
 			processa_area(0, nlin, 0, ncol, threads, thread_data);
