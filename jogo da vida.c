@@ -1,5 +1,29 @@
 #include "jogo da vida.h"
 
+
+/**
+ * Função que le os parametros iniciais e os atribui à variáveis
+ * @param argc numero de argumento passados na entrada
+ * @param argv vetor com os valores dos argumentos passados
+ */
+void config(int argc, char *argv[]){
+	/**
+	 * Verifica se há parâmetros de linha de comando e lê a figura inicial
+	 */
+	if(argc>1)
+		pbm(argv[1], &matriz, &nlin, &ncol);
+	else
+	{
+		printf("Modo de uso:\n\t./life [arquivo de entrada] [frames por segundo(opcional)]\n");
+		printf("Exemplo de execucao: ./life pulsar.pbm\n");
+		exit(0);
+	}
+	
+	if(argc>2)
+		sscanf(argv[2], "%f", &fps);
+
+}
+
 /**
  * Verifica se uma célula da matriz atual estará viva no próximo turno
  * 
@@ -194,6 +218,8 @@ void processa_sem_threads()
 
 /**
  * Função main
+ * @param argc numero de argumento passados na entrada
+ * @param argv vetor com os valores dos argumentos passados
  */
 int main (int argc, char *argv[])
 {
@@ -208,19 +234,9 @@ int main (int argc, char *argv[])
 	int rc;
 	
 	/**
-	 * Verifica se há parâmetros de linha de comando e lê a figura inicial
+	 * Lê os parâmetros, e interrompe a execução se não houver nenhum
 	 */
-	if(argc>1)
-		pbm(argv[1], &matriz, &nlin, &ncol);
-	else
-	{
-		printf("Modo de uso:\n\t./life [arquivo de entrada] [frames por segundo(opcional)]\n");
-		printf("Exemplo de execucao: ./life pulsar.pbm\n");
-		return 0;
-	}
-	
-	if(argc>2)
-		sscanf(argv[2], "%f", &fps);
+	config(argc, argv);
 	
 	/** Aloca a matriz da próxima posição */
 	matriz_prox = (int **)calloc(nlin,sizeof(int*));
