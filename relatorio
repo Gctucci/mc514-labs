@@ -1,0 +1,47 @@
+MC514 - 1º Semestre de 2011
+Trabalho 00 - Implementação do Jogo da Vida
+
+Alunos:
+Fernando Lucchesi Bastos Jurema RA: 091187
+Gabriel Coutinho Natucci 	RA: 091247
+
+
+Introdução
+
+O Jogo da Vida é um jogo desenvolvido pelo matemático John Horton Conway,
+na qual dispoe-se um tabuleiro e celulas autômatas no mesmo, seguindo a seguinte
+regra de sobrevivência para a próxima geração:
+
+    * Uma célula viva com menos de dois vizinhos morre (solidão).
+    * Uma célula viva com mais de três vizinhos morre (superlotação).
+    * Uma célula com dois ou três vizinhos sobrevive para a próxima geração.
+    * Uma célula morta com exatamente três vizinhos renasce. 
+
+O objetivo atingido com o projeto foi o conhecimento e utilização de threads para
+a implementação do jogo da vida.
+
+
+Decisões de Projeto
+
+Como forma de iniciar o jogo, optamos por ler a configuração inicial de um arquivo
+de imagens simples(pbm). Portanto, o código é flexível quanto ao tamanho do tabuleiro,
+limitado apenas pelo tamanho da tela do terminal, onde o programa é executado.
+
+Para mostrar cada iteração do jogo, utilizamos a biblioteca ncurses, que fornece
+funcionalidades de exibição e atualização da tela, além de entrada do teclado, para
+programas em modo texto.
+
+O jogo é representado por duas matrizes, a da configuração atual e a da próxima, onde
+será escrito o resultado da aplicação das regras do jogo mais uma vez.
+
+Decidimos utilizar uma thread para cada célula do jogo. 
+
+
+
+estrutura do código
+
+
+
+descrição funcional
+
+// explicando que funções/procedimentos realizam o que etc. 
