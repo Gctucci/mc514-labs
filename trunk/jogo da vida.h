@@ -30,6 +30,15 @@ int nlin,ncol;	    	/** número de linhas e colunas do tabuleiro */
 int iter=0;         	/** número de iterações do jogo da vida */
 float fps = FPS;	/** número de frames por segundo */
 
+
+/**
+ * Função que le os parametros iniciais e os atribui à variáveis
+ * @param argc numero de argumento passados na entrada
+ * @param argv vetor com os valores dos argumentos passados
+ */
+void config(int argc, char *argv[]);
+
+
 /**
  * Verifica se uma célula da matriz atual estará viva no próximo turno
  * 
