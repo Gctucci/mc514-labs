@@ -17,15 +17,16 @@ regra de sobrevivência para a próxima geração:
     * Uma célula com dois ou três vizinhos sobrevive para a próxima geração.
     * Uma célula morta com exatamente três vizinhos renasce. 
 
-O objetivo atingido com o projeto foi o conhecimento e utilização de threads para
-a implementação do jogo da vida.
+Tendo isso em mente, o projeto proposto visava a utilização do conceito de threads
+para implementar o jogo da vida.
 
 
 Decisões de Projeto
 
 Como forma de iniciar o jogo, optamos por ler a configuração inicial de um arquivo
-de imagens simples(pbm). Portanto, o código é flexível quanto ao tamanho do tabuleiro,
-limitado apenas pelo tamanho da tela do terminal, onde o programa é executado.
+de imagens simples(pbm). Essa leitura é realizada utilizando a libpbm. Portanto, o 
+código é flexível quanto ao tamanho do tabuleiro, limitado apenas pelo tamanho da 
+tela do terminal, onde o programa é executado.
 
 Para mostrar cada iteração do jogo, utilizamos a biblioteca ncurses, que fornece
 funcionalidades de exibição e atualização da tela, além de entrada do teclado, para
@@ -34,14 +35,30 @@ programas em modo texto.
 O jogo é representado por duas matrizes, a da configuração atual e a da próxima, onde
 será escrito o resultado da aplicação das regras do jogo mais uma vez.
 
-Decidimos utilizar uma thread para cada célula do jogo. 
+Decidimos utilizar uma thread para cada célula da matriz do jogo. Quando o número de 
+células é muito grande, dividimos a matriz em 4 partes, recursivamente. Cada thread 
+verifica se a célula correspondente irá viver ou morrer no próximo turno, atualizando
+então o próximo tabuleiro.
+
+A execução é mantida em um laço até que o usuário pressione alguma tecla. Esse laço tem
+sua execução limitada pelo número de frames por segundo, que pode ser lido por parâmetro.
+Caso o parâmetro não seja passado, o programa assume uma atualização de 3.0 fps.
 
 
 
-estrutura do código
+Estrutura do Código
+
+O código foi dividido em 4 arquivos principais: dois arquivos .h (pbm.h e jogo da vida.h)
+e dois arquivos . c (jogo da vida.c e pbm .c).
+O código referente aos arquivos jogo da vida.* trata da implementação do jogo propriamente dita,
+com a criação/atualização de tabuleiros e de dispor a imagem na tela.
+O código dos arquivos pbm.* trata da leitura/conversão das imagens de entrada em uma matriz de inteiros
+para a execução do jogo.
+A funçao main() está localizada no arquivo jogo da vida.c.
 
 
 
-descrição funcional
+
+Descrição Funcional
 
 // explicando que funções/procedimentos realizam o que etc. 
