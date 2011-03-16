@@ -8,8 +8,10 @@ test :
 
 doc:
 	-doxygen Doxyfile
+	-cd doc/latex; make
+	-cp doc/latex/refman.pdf Relatório.pdf
 
 mem:
 	-valgrind --leak-check=full ./life
 	@echo ""
-	@echo "Ignore os leaks da linha 278, são internos da ncurses"
+	@echo "Favor ignorar os leaks internos da ncurses"
