@@ -43,11 +43,22 @@ Caso o parâmetro não seja passado, o programa assume uma atualização de 3.0 
 
 O código foi dividido em 4 arquivos principais: dois arquivos .h (pbm.h e jogo da vida.h)
 e dois arquivos . c (jogo da vida.c e pbm .c).
+
 O código referente aos arquivos jogo da vida.* trata da implementação do jogo propriamente dita,
 com a criação/atualização de tabuleiros e de dispor a imagem na tela.
+
 O código dos arquivos pbm.* trata da leitura/conversão das imagens de entrada em uma matriz de inteiros
 para a execução do jogo.
 A funçao main() está localizada no arquivo jogo da vida.c.
+
+Na main() estão as funções que verificarão se há células vivas vizinhas a uma determinada célula, e as funções que tratam de, uma vez verificadas as células vizinhas (conta_celula()), calcula-se se a célula atual irá viver e a escreve em outro tabuleiro (valida_celula()). Na main também está a função que trata o recebimento de imagens muito grandes, dividindo-a em 4 partes recursivamente (processa_area()). Há uma função que diz o trabalho as threads ao serem criadas - threads são criadas na main() - executando assim o trabalho que as threads devem realizar (exec_thread()). 
+
+Na main() também estão as funções de imprimir na tela (imprime()),
+algumas funções extras de debug (imprime_soma()) e também uma função que recebe e trata os parâmetros passados na linha de comando (config()). 
+
+No arquivo pbm.c está a função pbm(), que pega uma imagem a converte apropriadamente para a execução do programa.
+
+Para maiores informações, verifique a estrutura dos arquivos na página Doxygen correspondente.
  * 
  * 
  */
