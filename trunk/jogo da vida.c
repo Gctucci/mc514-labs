@@ -7,28 +7,29 @@
  * @param argv vetor com os valores dos argumentos passados
  */
 void config(int argc, char *argv[]){
-	/**
-	 * Verifica se há parâmetros de linha de comando e lê a figura inicial
-	 */
+	/* Verifica se há parâmetros de linha de comando e lê a figura inicial */
 	if(argc>1)
 		pbm(argv[1], &matriz, &nlin, &ncol);
 	else
 	{
 		printf("Modo de uso:\n\t./life [arquivo de entrada] [frames por segundo(opcional)]\n");
-		printf("Exemplo de execucao: ./life pulsar.pbm\n");
+		printf("Exemplo de execucao: ./life pulsar.pbm 5.0\n");
 		exit(0);
 	}
 	
+	/* Verifica se há um valor de FPS nos parâmetros */
 	if(argc>2)
 		sscanf(argv[2], "%f", &fps);
 
 }
 
 /**
- * Verifica se uma célula da matriz atual estará viva no próximo turno
+ * Função que verifica se uma célula da matriz atual estará viva no próximo turno
  * 
  * @param lin Linha da célula
  * @param col Coluna da célula
+ * 
+ * @returns O estado da célula no próximo turno
  */
 int valida_celula(int lin, int col){
 	int num_viva; /** Indica a soma do numero de celulas vivas */
@@ -36,8 +37,7 @@ int valida_celula(int lin, int col){
 	num_viva = conta_celula(lin, col);
 	if(matriz[lin][col] == VIVA)
 	{
-		/**
-		 * Caso o numero de celulas vizinhas seja maior que tres ou menor
+		/* Caso o numero de celulas vizinhas seja maior que tres ou menor
 		 * que dois, a celula morre por superlotação/solidão. Senão, ela sobrevive
 		 * para a proxima geração
 		 */
@@ -61,16 +61,21 @@ int valida_celula(int lin, int col){
  * 
  * @param lin Linha da célula
  * @param col Coluna da célula
+ * 
+ * @returns Contágem de células vivas ao redor da posição indicada
  */
 int conta_celula(int lin, int col){
 	int soma=0,i,j;
 	
+	/* Limites da linha */
 	for(i=lin-1; i<lin+2; i++){
 		if( (i >= 0) && (i < nlin) ) {
 		
+			/* Limites da coluna */
 			for(j=col-1;j<col+2;j++){
 				if( (j >= 0) && (j < ncol) ){
 				
+					/* Ignorar a própria célula */
 					if( !((i==lin) && (j==col)) ){
 						if(matriz[i][j] == VIVA)
 							soma++;
@@ -105,7 +110,7 @@ void *exec_thread(void *threadarg){
 }
 
 /**
- *  Imprime o tabuleiro atual
+ * Função que imprime o tabuleiro atual.
  */
 void imprime()	{
 	clear();
@@ -129,7 +134,7 @@ void imprime()	{
 }
 
 /**
- *  Imprime as somas do tabuleiro atual (debug)
+ * Função que imprime as somas do tabuleiro atual. (debug)
  */
 void imprime_soma()	{
 	printw("\n\n");
@@ -147,8 +152,8 @@ void imprime_soma()	{
 }
 
 /**
- * Processa uma certa área da matriz.
- * Divide a imagem recursivamente em quatro partes
+ * Função que processa uma certa área da matriz.
+ * Se a matriz for muito grande, ela é tratada em quatro partes, recursivamente.
  *
  * @param lin_0 Linha inicial
  * @param lin_1 Linha final
@@ -164,7 +169,7 @@ void processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threa
 	int rc;
 	int lin_meio, col_meio;
 	
-	/** Verifica a área a ser tratada */
+	/* Verifica a área a ser tratada */
 	if( (col_1-col_0)*(lin_1-lin_0) > MAXTHREADS)
 	{
 		lin_meio = (lin_1+lin_0)/2;
@@ -178,7 +183,7 @@ void processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threa
 	}
 	else
 	{
-		/** Modifica o próximo tabuleiro */
+		/* Modifica o próximo tabuleiro */
 		for(i=lin_0; i<lin_1; i++){
 			for(j=col_0; j<col_1; j++){
 				t=pthread_create(&threads[i][j],NULL,exec_thread,(void *)&thread_data[i][j]);
@@ -190,7 +195,7 @@ void processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threa
 			}
 		}
 
-		/** Espera as threads morrerem */
+		/* Espera as threads morrerem */
 		for(i=lin_0; i<lin_1; i++){
 			for(j=col_0; j<col_1; j++){
 				rc = pthread_join(threads[i][j], &status);
@@ -204,7 +209,7 @@ void processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threa
 }
 
 /**
- * Processa a matriz sem usar threads (debug)
+ * Função que processa a matriz sem usar threads. (debug)
  */
 void processa_sem_threads()
 {
@@ -220,6 +225,8 @@ void processa_sem_threads()
  * Função main
  * @param argc numero de argumento passados na entrada
  * @param argv vetor com os valores dos argumentos passados
+ * 
+ * @returns 1 se houver algum erro, 0 caso contrário
  */
 int main (int argc, char *argv[])
 {
@@ -233,19 +240,16 @@ int main (int argc, char *argv[])
 	void *status;
 	int rc;
 	
-	/**
-	 * Lê os parâmetros, e interrompe a execução se não houver nenhum
-	 */
+	/* Lê os parâmetros, e interrompe a execução se não houver nenhum */
 	config(argc, argv);
 	
-	/** Aloca a matriz da próxima posição */
+	/* Aloca a matriz da próxima posição */
 	matriz_prox = (int **)calloc(nlin,sizeof(int*));
 	for(i=0;i<nlin;i++)
 		matriz_prox[i]=(int*)calloc(ncol,sizeof(int));
 
 	
-	/**
-	 * Inicializaçao das estruturas, onde threads sao as threads disponiveis - uma para cada celula 
+	/* Inicializaçao das estruturas, onde threads sao as threads disponiveis - uma para cada celula 
 	 * do tabuleiro -, thread_data é a estrutura a ser passada como argumento para a função que as 
 	 * threads executam
 	 */ 
@@ -253,16 +257,12 @@ int main (int argc, char *argv[])
 	thread_data = (data **)malloc(nlin*sizeof(data*));
 
 	for(i=0;i<nlin;i++){
-		/**
-		 * Alocação dinâmica da matriz de threads
-		 */
+		/* Alocação dinâmica da matriz de threads */
 		threads[i]=(pthread_t*)malloc(ncol*sizeof(pthread_t));
 		thread_data[i]=(data*)malloc(ncol*sizeof(data));
 
 		for(j=0;j<ncol;j++){
-			/**
-			 * Inicialização dos dados a serem passados para cada thread
-			 */
+			/* Inicialização dos dados a serem passados para cada thread */
 			thread_data[i][j].id[0] = i;
 			thread_data[i][j].id[1] = j;
 			thread_data[i][j].linha_atual = i;
@@ -270,7 +270,7 @@ int main (int argc, char *argv[])
 		}
 	}
 	
-	/** Inicializa a ncurses */
+	/* Inicializa a ncurses */
 	initscr(); cbreak(); noecho(); noraw(); timeout(0);
 	
 	t0 = clock(); // Inicializa o cronometro
@@ -280,20 +280,20 @@ int main (int argc, char *argv[])
 		/* Se já deu o tempo, roda mais uma iteração do jogo */
 		if( (t1 - t0)/(double)CLOCKS_PER_SEC > 1.0/fps )
 		{
-			/** Modifica o próximo tabuleiro */
+			/* Modifica o próximo tabuleiro */
 			processa_area(0, nlin, 0, ncol, threads, thread_data);
 			//processa_sem_threads(); //Descomentar para fins de depuração 
 			
-			imprime();	/** Imprime */
+			imprime();	/* Imprime */
 			//imprime_soma();
-			iter++; 	/** Incrementa o contador de iterações */
+			iter++; 	/* Incrementa o contador de iterações */
 			
-			/** Realiza a troca entre as matrizes */
+			/* Realiza a troca entre as matrizes */
 			matriz_tmp = matriz;
 			matriz = matriz_prox;
 			matriz_prox = matriz_tmp;
 			
-			/** Passa para o proximo frame */
+			/* Passa para o proximo frame */
 			t0 = t1;	
 		}
 		/* Verifica se é pra sair */
@@ -301,10 +301,9 @@ int main (int argc, char *argv[])
 		if(c!=CHAR) sair=1;
 	} while(!sair);
 	
-	endwin();	/** Finaliza a ncurses */
+	endwin();	/* Finaliza a ncurses */
 	
-	/**
-	 * Libera a memória utilizada
+	/* Libera a memória utilizada
 	 * obs: A biblioteca ncurses causa alguns leaks intencionais.
 	 */
 	for(i=0; i<nlin; i++)
