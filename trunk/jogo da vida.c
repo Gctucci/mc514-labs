@@ -239,11 +239,12 @@ int main (int argc, char *argv[])
 	char c;
 	void *status;
 	int rc;
-	char tmp[50];
+	char tmp[100];
 	
 	/* Lê os parâmetros, e interrompe a execução se não houver nenhum */
 	config(argc, argv);
 	
+	/* Remove as imagens pbm da execução anterior */
 	system("rm tmp/*.pbm");
 	
 	/* Aloca a matriz da próxima posição */
@@ -285,19 +286,23 @@ int main (int argc, char *argv[])
 		{
 			/* Modifica o próximo tabuleiro */
 			processa_area(0, nlin, 0, ncol, threads, thread_data);
-			//processa_sem_threads(); //Descomentar para fins de depuração 
+			//processa_sem_threads(); // Descomentar para fins de depuração
 			
-			imprime();	/* Imprime */
+			/* Imprime */
+			imprime();
+			//imprime_soma(); // Descomentar para fins de depuração
 			
-			sprintf(tmp, "tmp/pbm%4d.pbm", iter);
-			pbm_write(tmp, matriz, nlin, ncol); /* Gera o pbm da configuração atual */
-			//imprime_soma();
-			iter++; 	/* Incrementa o contador de iterações */
+			/* Gera o pbm do frame atual */
+			sprintf(tmp, "tmp/pbm%04d.pbm", iter);
+			pbm_write(tmp, matriz, nlin, ncol); 
 			
 			/* Realiza a troca entre as matrizes */
 			matriz_tmp = matriz;
 			matriz = matriz_prox;
 			matriz_prox = matriz_tmp;
+			
+			/* Incrementa o contador de iterações */
+			iter++;
 			
 			/* Passa para o proximo frame */
 			t0 = t1;	
@@ -308,6 +313,11 @@ int main (int argc, char *argv[])
 	} while(!sair);
 	
 	endwin();	/* Finaliza a ncurses */
+	
+	/* Gerando gif */
+	sprintf(tmp, "convert -scale %dx%d -delay 20 -loop 0 tmp/pbm*.pbm out.gif", 4*nlin, 4*ncol);
+	system(tmp);
+	printf("Arquivo out.gif gerado.\n");
 	
 	/* Libera a memória utilizada
 	 * obs: A biblioteca ncurses causa alguns leaks intencionais.
