@@ -1,7 +1,12 @@
 /**
  *
  * 
-@mainpage Introdução
+@mainpage Autores
+
+	@li Nome: Fernando Lucchesi Bastos Jurema RA: 091187
+	@li Nome: Gabriel Coutinho Natucci        RA: 091247
+
+@page page0 Introdução
 
 O Jogo da Vida é um jogo desenvolvido pelo matemático John Horton Conway,
 na qual dispoe-se um tabuleiro e celulas autômatas no mesmo, seguindo a seguinte
@@ -19,30 +24,76 @@ para implementar o jogo da vida.
 @page page1 Decisões de Projeto
 
 Como forma de iniciar o jogo, optamos por ler a configuração inicial de um arquivo
-de imagens simples(pbm). Essa leitura é realizada utilizando a libpbm. Portanto, o 
-código é flexível quanto ao tamanho do tabuleiro, limitado apenas pelo tamanho da 
+de imagens simples (.pbm). Essa leitura é realizada utilizando a libpbm. Portanto, o 
+código é flexível quanto ao tamanho do tabuleiro, com sua visualização limitada apenas pelo tamanho da 
 tela do terminal, onde o programa é executado.
 
 Para mostrar cada iteração do jogo, utilizamos a biblioteca ncurses, que fornece
 funcionalidades de exibição e atualização da tela, além de entrada do teclado, para
 programas em modo texto.
 
+Optamos por usar um makefile para compilar, depurar e gerar a documentação do programa.
+	@li Compilar: make
+	@li Depurar: make test
+	@li Documentação: make doc
+	@li Testar leaks de memória: make mem
+
+O comando "make doc" gera uma documentação em html e em latex (que depois é convertida em
+um relatório -este- em pdf) com a ajuda da ferramenta Doxygen, na pasta doc.
+
+OBS: Ao executar o comando "make mem", surgirão alguns leaks de memória. Entretanto, os mesmos
+são decorrentes da utilização da biblioteca ncurses, não havendo relação com o trabalho em si. 
+
 O jogo é representado por duas matrizes, a da configuração atual e a da próxima, onde
 será escrito o resultado da aplicação das regras do jogo mais uma vez.
 
 Decidimos utilizar uma thread para cada célula da matriz do jogo. Quando o número de 
-células é muito grande, dividimos a matriz em 4 partes, recursivamente. Cada thread 
-verifica se a célula correspondente irá viver ou morrer no próximo turno, atualizando
-então o próximo tabuleiro.
+células é muito grande, dividimos a matriz em 4 partes, recursivamente. Ao ser criada, a thread 
+recebe uma struct com um id único, a posição da mesma no tabuleiro (linha,coluna). A função main() 
+aguarda todas as threads acabarem e só então atualiza a tela.
 
-A execução é mantida em um laço até que o usuário pressione alguma tecla. Esse laço tem
+Cada thread verifica se a célula correspondente irá viver ou morrer no próximo turno, atualizando
+então o próximo tabuleiro. A função main() é então tratada como uma thread mãe,
+e espera todas as threads acabarem para atualizar a tela (join). Ao fim da atualização, as threads morrem,
+a main() incrementa um contador iter (número de iterações) e troca os tabuleiros (o da geração atual passa a ser
+o de próxima geração e vice-versa).
+
+Ao fim de uma iteração completa (criar threads - executar código - atualizar tela - trocar tabuleiro - matar threads),
+a main() executa novamente o ciclo, até o usuário digitar uma tecla. Esse ciclo tem
 sua execução limitada pelo número de frames por segundo, que pode ser lido por parâmetro.
+Essa verificação é realizada com o auxílio da biblioteca time.h.
 Caso o parâmetro não seja passado, o programa assume uma atualização de 3.0 fps.
 
-@page page2 Estrutura do Código
+Enquanto o programa executa o jogo da vida, ele gera arquivos .pbm na pasta tmp, indicando 
+os estados do tabuleiro em um dado momento. Ao fim do programa (o usuário pressiona uma 
+tecla), um comando da biblioteca imagemagick na main(), concatena as imagens geradas em tmp
+e as converte em um .gif (animação do jogo).
+
+@page page2 Dificuldades
+
+Um dos problemas enfrentados na configuração inicial do programa foi a passagem do tabuleiro como
+um atributo de cada thread, o que gerou problemas no controle de concorrência do programa.
+Optou-se então por utilizar variáveis globais para os tabuleiros, número de linha e colunas do mesmo.
+Dessa forma, cada thread atua apenas na sua posição.
+
+Outra grande dificuldade foi o limite do número de threads, pois para imagens (arquivos) muito grandes,
+as threads não podiam ser criadas uma para cada célula. Assim, criou-se uma função que dividia a imagem
+recursivamente até um número máximo especificado de threads poder ser criado (no caso 300).
+
+Houve um trabalho razoável na criação dos algoritmos de determinação se a célula ia morrer ou viver.
+Inicialmente, fizemos um comando for que verificava os vizinhos de uma determinada posição de forma incorreta.
+Posteriormente, as verificações foram melhoradas.
+
+Houve dificuldades em achar uma biblioteca apropriada para a criação do gif animado, sendo todas demasiado
+complexas, fugindo ao escopo do tempo do trabalho. Portando, optamos por gerar imagens simples (pbm)
+e uní-las usando uma ferramenta de linha de comando, do projeto imagemagick.
+
+
+
+@page page3 Estrutura do Código
 
 O código foi dividido em 4 arquivos principais: dois arquivos .h (pbm.h e jogo da vida.h)
-e dois arquivos . c (jogo da vida.c e pbm .c).
+e dois arquivos . c (jogo da vida.c e pbm.c).
 
 O código referente aos arquivos jogo da vida.* trata da implementação do jogo propriamente dita,
 com a criação/atualização de tabuleiros e de dispor a imagem na tela.

@@ -12,6 +12,6 @@ doc:
 	-cp doc/latex/refman.pdf Relatório.pdf
 
 mem:
-	-valgrind --leak-check=full ./life
+	-valgrind --leak-check=full ./life pulsar.pbm
 	@echo ""
 	@echo "Favor ignorar os leaks internos da ncurses"
