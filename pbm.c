@@ -77,7 +77,7 @@ void pbm_write(char *arq, int **tabuleiro, int nlin, int ncol)
 	{
 		fprintf(img, "P1\n");
 		fprintf(img, "# Created by Fernando Lucchesi and Gabriel Natucci\n");
-		fprintf(img, "%d %d\n", nlin, ncol);
+		fprintf(img, "%d %d\n", ncol, nlin);
 		for(i=0; i<nlin; i++){
 			for(j=0; j<ncol; j++)
 				fprintf(img, "%d ", tabuleiro[i][j]);
