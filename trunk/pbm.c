@@ -60,3 +60,34 @@ void pbm(char *arq, int ***tabuleiro, int *nlin, int *ncol)
 	}
 }
 
+/**
+ * Função que recebe uma matriz de ints e imprime em um pgm
+ * 
+ * @param arq Caminho para o arquivo pbm a ser escrito
+ * @param tabuleiro Ponteiro para a matriz de ints
+ * @param nlin Número de linhas
+ * @param ncol Número de colunas
+ */
+void pbm_write(char *arq, int **tabuleiro, int nlin, int ncol)
+{
+	FILE *img;
+	int i, j;
+	img = fopen(arq, "w");
+	if(img)
+	{
+		fprintf(img, "P1\n");
+		fprintf(img, "# Created by Fernando Lucchesi and Gabriel Natucci\n");
+		fprintf(img, "%d %d\n", nlin, ncol);
+		for(i=0; i<nlin; i++){
+			for(j=0; j<ncol; j++)
+				fprintf(img, "%d ", tabuleiro[i][j]);
+			fprintf(img, "\n");
+		}
+		fclose(img);
+	}
+	else
+	{
+		printf("Erro na escrita do arquivo %s\n", arq);
+	}
+}
+

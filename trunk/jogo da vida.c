@@ -239,9 +239,12 @@ int main (int argc, char *argv[])
 	char c;
 	void *status;
 	int rc;
+	char tmp[50];
 	
 	/* Lê os parâmetros, e interrompe a execução se não houver nenhum */
 	config(argc, argv);
+	
+	system("rm tmp/*.pbm");
 	
 	/* Aloca a matriz da próxima posição */
 	matriz_prox = (int **)calloc(nlin,sizeof(int*));
@@ -285,6 +288,9 @@ int main (int argc, char *argv[])
 			//processa_sem_threads(); //Descomentar para fins de depuração 
 			
 			imprime();	/* Imprime */
+			
+			sprintf(tmp, "tmp/pbm%4d.pbm", iter);
+			pbm_write(tmp, matriz, nlin, ncol); /* Gera o pbm da configuração atual */
 			//imprime_soma();
 			iter++; 	/* Incrementa o contador de iterações */
 			
