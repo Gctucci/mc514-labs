@@ -222,6 +222,14 @@ void processa_sem_threads()
 }
 
 /**
+ * Função que processa a matriz
+ */
+void processa_com_pool()
+{
+	
+}
+
+/**
  * Função main
  * @param argc numero de argumento passados na entrada
  * @param argv vetor com os valores dos argumentos passados
@@ -231,15 +239,21 @@ void processa_sem_threads()
 int main (int argc, char *argv[])
 {
 	int i,j,t;
-	pthread_t** threads;	/**ponteiro para uma matriz que guarda as threads (id)*/
-	data** thread_data;		/**ponteiro para os dados que vao ser passados - um para cada thread*/
-	int **matriz_tmp;		/**ponteiro auxiliar para a troca entre as matrizes*/
-	clock_t t0=0, t1=0;    	/**variáveis para controle do tempo*/
-	int sair=0;         	/**variável que verifica se é para sair ou não do programa*/
+	pthread_t* threads;     /* ponteiro para um vetor que guarda as threads (id)*/
+	data* thread_data;	    /* ponteiro para os dados que vao ser passados - um para cada thread*/
+	int **matriz_tmp;       /* ponteiro auxiliar para a troca entre as matrizes*/
+	clock_t t0=0, t1=0;    	/* variáveis para controle do tempo*/
+	int sair=0;             /* variável que verifica se é para sair ou não do programa*/
 	char c;
 	void *status;
 	int rc;
 	char tmp[100];
+	pthread_attr_t attr;
+	Vetor **cel_livres;
+	
+	/* atributos das threads */
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 	
 	/* Lê os parâmetros, e interrompe a execução se não houver nenhum */
 	config(argc, argv);
@@ -251,26 +265,27 @@ int main (int argc, char *argv[])
 	matriz_prox = (int **)calloc(nlin,sizeof(int*));
 	for(i=0;i<nlin;i++)
 		matriz_prox[i]=(int*)calloc(ncol,sizeof(int));
+	
+	cel_livres = (Vetor **)malloc(nlin, sizeof(Vetor*));
+	for(i=0;i<nlin;i++){
+		cel_livres[i]=(int*)calloc(ncol,sizeof(int));
+	}
+	
 
 	
-	/* Inicializaçao das estruturas, onde threads sao as threads disponiveis - uma para cada celula 
-	 * do tabuleiro -, thread_data é a estrutura a ser passada como argumento para a função que as 
+	/* Inicializaçao das estruturas, onde threads sao as threads do pool (MAXTHREADS)
+	 * thread_data é a estrutura a ser passada como argumento para a função que as 
 	 * threads executam
 	 */ 
-	threads = (pthread_t **)malloc(nlin*sizeof(pthread_t*));
-	thread_data = (data **)malloc(nlin*sizeof(data*));
-
-	for(i=0;i<nlin;i++){
-		/* Alocação dinâmica da matriz de threads */
-		threads[i]=(pthread_t*)malloc(ncol*sizeof(pthread_t));
-		thread_data[i]=(data*)malloc(ncol*sizeof(data));
-
-		for(j=0;j<ncol;j++){
-			/* Inicialização dos dados a serem passados para cada thread */
-			thread_data[i][j].id[0] = i;
-			thread_data[i][j].id[1] = j;
-			thread_data[i][j].linha_atual = i;
-			thread_data[i][j].coluna_atual = j;
+	threads = (pthread_t *)malloc(MAXTHREADS*sizeof(pthread_t));
+	thread_data = (data *)malloc(MAXTHREADS*sizeof(data));
+	
+	/* Inicializa o pool de threads */
+	for(i=0; i<MAXTHREADS; i++){
+		t=pthread_create(&threads[i],attr,exec_thread,(void *)&thread_data[i]);
+		if(t){
+			printf("ERRO; codigo de retorno de pthread_create() eh %d\n", t);
+			exit(-1);
 		}
 	}
 	
@@ -284,9 +299,12 @@ int main (int argc, char *argv[])
 		/* Se já deu o tempo, roda mais uma iteração do jogo */
 		if( (t1 - t0)/(double)CLOCKS_PER_SEC > 1.0/fps )
 		{
+			/* Define o numero de celulas a serem tratadas */
+			cel_livres = nlin * ncol;
+			
 			/* Modifica o próximo tabuleiro */
-			processa_area(0, nlin, 0, ncol, threads, thread_data);
 			//processa_sem_threads(); // Descomentar para fins de depuração
+			processa_com_pool();
 			
 			/* Imprime */
 			imprime();
@@ -319,13 +337,20 @@ int main (int argc, char *argv[])
 	system(tmp);
 	printf("Arquivo out.gif gerado.\n");
 	
+	/* Encerra as threads */
+	for(i=0; i<MAXTHREADS; i++){
+		rc = pthread_join(threads[i], &status);
+		if (rc) {
+			printf("ERRO; codigo de retorno de pthread_join() is %d\n", rc);
+			exit(-1);
+		}
+	}
+	
 	/* Libera a memória utilizada
 	 * obs: A biblioteca ncurses causa alguns leaks intencionais.
 	 */
 	for(i=0; i<nlin; i++)
 	{
-		free(threads[i]);
-		free(thread_data[i]);
 		free(matriz[i]);
 		free(matriz_prox[i]);
 	}

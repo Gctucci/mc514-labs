@@ -23,12 +23,22 @@ typedef struct thread_data_structure {
 	int coluna_atual;	/** coluna do pixel da thread */
 } data;
 
+/** 
+ * Estrutura da lista de células a serem tratadas 
+ */
+typedef struct vetor {
+	int i;
+	int j;
+	struct vetor *prox;
+} Vetor;
+
 /**Variaveis globais (compartilhadas pelas threads)*/
-int **matriz;	    	/** matriz com o tabuleiro da posição/geração atual */
-int **matriz_prox;  	/** matriz auxiliar para criar um tabuleiro de próxima geração */
-int nlin,ncol;	    	/** número de linhas e colunas do tabuleiro */
-int iter=0;         	/** número de iterações do jogo da vida */
-float fps = FPS;	/** número de frames por segundo */
+int **matriz;	        /** matriz com o tabuleiro da posição/geração atual */
+int **matriz_prox;      /** matriz auxiliar para criar um tabuleiro de próxima geração */
+int nlin,ncol;	        /** número de linhas e colunas do tabuleiro */
+int iter=0;             /** número de iterações do jogo da vida */
+float fps = FPS;        /** número de frames por segundo */
+pthread_mutex_t mutex;  /** mutex */
 
 
 /**
