@@ -204,8 +204,6 @@ int main (int argc, char *argv[])
 	clock_t t0=0, t1=0;    	/* variáveis para controle do tempo*/
 	int sair=0;             /* variável que verifica se é para sair ou não do programa*/
 	char c;
-	void *status;
-	int rc;
 	char tmp[100];
 	pthread_attr_t attr;
 	Ponto **matr_cel;       /* matriz de structs de pontos, a ser usado para a lista de celulas */
@@ -311,15 +309,8 @@ int main (int argc, char *argv[])
 	system(tmp);
 	printf("Arquivo out.gif gerado.\n");
 	
-	/* Encerra as threads */
-	for(i=0; i<MAXTHREADS; i++){
-		rc = pthread_join(threads[i], &status);
-		if (rc) {
-			printf("ERRO; codigo de retorno de pthread_join() is %d\n", rc);
-			exit(-1);
-		}
-	}
-	
+	for(i=0;i<MAXTHREADS;i++)
+		pthread_kill(threads[i],TERMINATE);
 	/* Libera a memória utilizada
 	 * obs: A biblioteca ncurses causa alguns leaks intencionais.
 	 */

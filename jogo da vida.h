@@ -3,7 +3,7 @@
 #include<ncurses.h>
 #include<pthread.h>
 #include<time.h>
-
+#include<signal.h>
 #include"pbm.h"
 
 #define MORTA 0 
@@ -13,7 +13,7 @@
 #define FPS 3.0
 #define CHAR 10
 #define MAXTHREADS 5
-
+#define TERMINATE 15
 /**
  * Estrutura de argumentos de uma thread
  */
@@ -113,5 +113,5 @@ void processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threa
  */
 void processa_sem_threads();
 
-
+int pthread_kill(pthread_t thread, int signal);
 
