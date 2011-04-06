@@ -101,19 +101,28 @@ void *exec_thread(void *threadarg){
 	int lin,col;
 	Ponto *cel=NULL;
 	while(1){
-		pthread_mutex_lock(&mutex);
-		if(cel_livres!=NULL){
-			*cel = *cel_livres;
-			cel_livres->prox = cel_livres->prox->prox;
-			pthread_mutex_unlock(&mutex);
+		// Acessa a lista de celulas
+		pthread_mutex_lock(&mutex_lista);
+		if(lista_cel!=NULL){
+			// Pega a primeira, tira da lista e já desocupa o mutex
+			cel = lista_cel;
+			lista_cel = lista_cel->prox;
+			pthread_mutex_unlock(&mutex_lista);
 			
+			// Trata a célula
 			lin = cel->i;
 			col = cel->j;
 			matriz_prox[lin][col] = valida_celula(lin, col);
-			pthread_mutex_unlock(&(cel->mutex));
+			
+			// Incrementa o contador de células
+			pthread_mutex_lock(&mutex_num);
+			num_cel++;
+			// Se já deu o limite, avisa pra main
+			if(num_cel==nlin*ncol) pthread_cond_signal(&cond_num);
+			pthread_mutex_unlock(&mutex_num);
 		}
 		else
-			pthread_mutex_unlock(&mutex);
+			pthread_mutex_unlock(&mutex_lista);
 	}
 }
 
@@ -137,6 +146,7 @@ void imprime()	{
 	
 	printw("iter: \t%d\n", iter);
 	printw("fps: \t%.1f\n", fps);
+	printw("num_cel: \t%d\n", num_cel);
 	printw("Pressione qualquer tecla para sair.\n");
 	refresh();
 }
@@ -165,19 +175,17 @@ void imprime_soma()	{
 void organiza_cel_livres(Ponto **matr_cel)
 {
 	int i, j;
-	pthread_mutex_lock(&mutex);
+	pthread_mutex_lock(&mutex_lista);
+	lista_cel = &matr_cel[0][0];
 	for(i=0;i<nlin;i++){
 		for(j=0;j<ncol-1;j++)
 		{
 			matr_cel[i][j].prox = &matr_cel[i][j+1];
-			pthread_mutex_lock(&(matr_cel[i][j].mutex));
 		}
-		pthread_mutex_lock(&(matr_cel[i][ncol-1].mutex));
-		
 		if(i<nlin-1)
 			matr_cel[i][ncol-1].prox = &matr_cel[i+1][0];
 	}
-	pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&mutex_lista);
 }
 
 /**
@@ -201,6 +209,9 @@ int main (int argc, char *argv[])
 	char tmp[100];
 	pthread_attr_t attr;
 	Ponto **matr_cel;       /* matriz de structs de pontos, a ser usado para a lista de celulas */
+	pthread_mutex_init(&mutex_num, NULL);
+	pthread_mutex_init(&mutex_lista, NULL);
+	pthread_cond_init (&cond_num, NULL);
 	
 	/* atributos das threads */
 	pthread_attr_init(&attr);
@@ -229,7 +240,7 @@ int main (int argc, char *argv[])
 	}
 	
 	/* Organiza a lista de celulas a serem tratadas */
-	//organiza_cel_livres(matr_cel);
+	organiza_cel_livres(matr_cel);
 	
 	/* Inicializaçao das estruturas, onde threads sao as threads do pool (MAXTHREADS)
 	 * thread_data é a estrutura a ser passada como argumento para a função que as 
@@ -257,11 +268,15 @@ int main (int argc, char *argv[])
 		/* Se já deu o tempo, roda mais uma iteração do jogo */
 		if( (t1 - t0)/(double)CLOCKS_PER_SEC > 1.0/fps )
 		{
-			/* Espera até as threads acabarem com as celulas da lista */
-			for(i=0; i<nlin; i++)
-				for(j=0; j<ncol; j++)
-					pthread_mutex_lock(&(matr_cel[i][j].mutex));
+			pthread_mutex_lock(&mutex_num);
+			/* Organiza a lista de celulas a serem tratadas */
+			organiza_cel_livres(matr_cel);
 			
+			/* Espera até as threads acabarem com as celulas da lista */
+			while(num_cel<nlin*ncol)
+			{
+				pthread_cond_wait(&cond_num, &mutex_num);
+			}
 			
 			/* Imprime */
 			imprime();
@@ -276,14 +291,13 @@ int main (int argc, char *argv[])
 			matriz = matriz_prox;
 			matriz_prox = matriz_tmp;
 			
-			/* Organiza a lista de celulas a serem tratadas */
-			organiza_cel_livres(matr_cel);
-			
 			/* Incrementa o contador de iterações */
 			iter++;
 			
 			/* Passa para o proximo frame */
 			t0 = t1;	
+			num_cel=0;
+			pthread_mutex_unlock(&mutex_num);
 		}
 		/* Verifica se é pra sair */
 		c = getch();
