@@ -27,18 +27,20 @@ typedef struct thread_data_structure {
 typedef struct ponto {
 	int i;
 	int j;
-	pthread_mutex_t mutex; // se está travado, tem que ser tratado
 	struct ponto *prox;
 } Ponto;
 
 /**Variaveis globais (compartilhadas pelas threads)*/
-int **matriz;	        /** matriz com o tabuleiro da posição/geração atual */
-int **matriz_prox;      /** matriz auxiliar para criar um tabuleiro de próxima geração */
-int nlin,ncol;	        /** número de linhas e colunas do tabuleiro */
-int iter=0;             /** número de iterações do jogo da vida */
-float fps = FPS;        /** número de frames por segundo */
-pthread_mutex_t mutex;  /** mutex */
-Ponto *cel_livres=NULL; /** lista de células a serem tratadas */
+int **matriz;	                /** matriz com o tabuleiro da posição/geração atual */
+int **matriz_prox;              /** matriz auxiliar para criar um tabuleiro de próxima geração */
+int nlin,ncol;	                /** número de linhas e colunas do tabuleiro */
+int iter=0;                     /** número de iterações do jogo da vida */
+float fps = FPS;                /** número de frames por segundo */
+Ponto *lista_cel=NULL;          /** lista de células a serem tratadas */
+pthread_mutex_t mutex_lista;    /** mutex da lista de células */
+int num_cel=0;                  /** número de células livres */
+pthread_mutex_t mutex_num;      /** mutex do número de células livres */
+pthread_cond_t cond_num;        /** cond do número de células livres */
 
 
 /**
