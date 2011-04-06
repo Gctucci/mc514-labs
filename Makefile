@@ -1,7 +1,7 @@
 .PHONY : test doc mem
 
 make :
-	-gcc -I/usr/include/netpbm  -lncurses -lpthread -lnetpbm -g *.c -o life
+	-gcc -I/usr/include/netpbm -Wall -pedantic -std=c99 -lncurses -lpthread -lnetpbm -g *.c -o life
 
 test :
 	-gdb life

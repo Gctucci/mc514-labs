@@ -12,25 +12,24 @@
 #define SOLIDAO 2
 #define FPS 3.0
 #define CHAR 10
-#define MAXTHREADS 300
+#define MAXTHREADS 5
 
 /**
  * Estrutura de argumentos de uma thread
  */
 typedef struct thread_data_structure {
 	int id[3];	    	/** id único */
-	int linha_atual;	/** linha do pixel da thread */
-	int coluna_atual;	/** coluna do pixel da thread */
 } data;
 
 /** 
  * Estrutura da lista de células a serem tratadas 
  */
-typedef struct vetor {
+typedef struct ponto {
 	int i;
 	int j;
-	struct vetor *prox;
-} Vetor;
+	pthread_mutex_t mutex; // se está travado, tem que ser tratado
+	struct ponto *prox;
+} Ponto;
 
 /**Variaveis globais (compartilhadas pelas threads)*/
 int **matriz;	        /** matriz com o tabuleiro da posição/geração atual */
@@ -39,6 +38,7 @@ int nlin,ncol;	        /** número de linhas e colunas do tabuleiro */
 int iter=0;             /** número de iterações do jogo da vida */
 float fps = FPS;        /** número de frames por segundo */
 pthread_mutex_t mutex;  /** mutex */
+Ponto *cel_livres=NULL; /** lista de células a serem tratadas */
 
 
 /**
