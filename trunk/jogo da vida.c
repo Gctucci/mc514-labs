@@ -46,7 +46,7 @@ int valida_celula(int lin, int col){
 		else
 			return VIVA;
 	}
-	if(matriz[lin][col] == MORTA)
+	else
 	{
 		if(num_viva == 3)
 			return VIVA; // renasce
@@ -98,15 +98,23 @@ int conta_celula(int lin, int col){
  * @param threadarg Ponteiro void para a struct de parâmetros para a thread
  */
 void *exec_thread(void *threadarg){
-
-	data *dados = (data*)threadarg;
-	int ** auxm = NULL;
-	int valida,lin,col;
-
-	lin=dados->linha_atual;
-	col=dados->coluna_atual;
-	
-	matriz_prox[lin][col] = valida_celula(lin, col);
+	int lin,col;
+	Ponto *cel=NULL;
+	while(1){
+		pthread_mutex_lock(&mutex);
+		if(cel_livres!=NULL){
+			*cel = *cel_livres;
+			cel_livres->prox = cel_livres->prox->prox;
+			pthread_mutex_unlock(&mutex);
+			
+			lin = cel->i;
+			col = cel->j;
+			matriz_prox[lin][col] = valida_celula(lin, col);
+			pthread_mutex_unlock(&(cel->mutex));
+		}
+		else
+			pthread_mutex_unlock(&mutex);
+	}
 }
 
 /**
@@ -152,81 +160,24 @@ void imprime_soma()	{
 }
 
 /**
- * Função que processa uma certa área da matriz.
- * Se a matriz for muito grande, ela é tratada em quatro partes, recursivamente.
- *
- * @param lin_0 Linha inicial
- * @param lin_1 Linha final
- * @param col_0 Coluna inicial
- * @param col_1 Coluna final
- * @param threads Matriz de threads
- * @param thread_data Matriz de dados das threads
+ * Função que organiza a lista de celulas a serem tratadas
  */
-void processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threads, data** thread_data)
+void organiza_cel_livres(Ponto **matr_cel)
 {
-	int i, j, t;
-	void *status;
-	int rc;
-	int lin_meio, col_meio;
-	
-	/* Verifica a área a ser tratada */
-	if( (col_1-col_0)*(lin_1-lin_0) > MAXTHREADS)
-	{
-		lin_meio = (lin_1+lin_0)/2;
-		col_meio = (col_1+col_0)/2;
-		
-		processa_area(lin_0, lin_meio, col_0, col_meio, threads, thread_data);
-		processa_area(lin_meio, lin_1, col_0, col_meio, threads, thread_data);
-		
-		processa_area(lin_0, lin_meio, col_meio, col_1, threads, thread_data);
-		processa_area(lin_meio, lin_1, col_meio, col_1, threads, thread_data);
-	}
-	else
-	{
-		/* Modifica o próximo tabuleiro */
-		for(i=lin_0; i<lin_1; i++){
-			for(j=col_0; j<col_1; j++){
-				t=pthread_create(&threads[i][j],NULL,exec_thread,(void *)&thread_data[i][j]);
-
-				if(t){
-					printf("ERRO; codigo de retorno de pthread_create() is %d\n", t);
-					exit(-1);
-				}
-			}
-		}
-
-		/* Espera as threads morrerem */
-		for(i=lin_0; i<lin_1; i++){
-			for(j=col_0; j<col_1; j++){
-				rc = pthread_join(threads[i][j], &status);
-				if (rc) {
-					printf("ERRO; codigo de retorno de pthread_join() is %d\n", rc);
-					exit(-1);
-				}
-			}
-		}
-	}
-}
-
-/**
- * Função que processa a matriz sem usar threads. (debug)
- */
-void processa_sem_threads()
-{
-	int valida, i, j;
+	int i, j;
+	pthread_mutex_lock(&mutex);
 	for(i=0;i<nlin;i++){
-		for(j=0;j<ncol;j++){
-			matriz_prox[i][j] = valida_celula(i, j);
+		for(j=0;j<ncol-1;j++)
+		{
+			matr_cel[i][j].prox = &matr_cel[i][j+1];
+			pthread_mutex_lock(&(matr_cel[i][j].mutex));
 		}
-	}	
-}
-
-/**
- * Função que processa a matriz
- */
-void processa_com_pool()
-{
-	
+		pthread_mutex_lock(&(matr_cel[i][ncol-1].mutex));
+		
+		if(i<nlin-1)
+			matr_cel[i][ncol-1].prox = &matr_cel[i+1][0];
+	}
+	pthread_mutex_unlock(&mutex);
 }
 
 /**
@@ -249,7 +200,7 @@ int main (int argc, char *argv[])
 	int rc;
 	char tmp[100];
 	pthread_attr_t attr;
-	Vetor **cel_livres;
+	Ponto **matr_cel;       /* matriz de structs de pontos, a ser usado para a lista de celulas */
 	
 	/* atributos das threads */
 	pthread_attr_init(&attr);
@@ -266,12 +217,19 @@ int main (int argc, char *argv[])
 	for(i=0;i<nlin;i++)
 		matriz_prox[i]=(int*)calloc(ncol,sizeof(int));
 	
-	cel_livres = (Vetor **)malloc(nlin, sizeof(Vetor*));
+	matr_cel = (Ponto **)calloc(nlin,sizeof(Ponto*));
 	for(i=0;i<nlin;i++){
-		cel_livres[i]=(int*)calloc(ncol,sizeof(int));
+		matr_cel[i]=(Ponto*)calloc(ncol,sizeof(Ponto));
+		for(j=0;j<ncol;j++)
+		{
+			matr_cel[i][j].i = i;
+			matr_cel[i][j].j = j;
+			matr_cel[i][j].prox = NULL;
+		}
 	}
 	
-
+	/* Organiza a lista de celulas a serem tratadas */
+	//organiza_cel_livres(matr_cel);
 	
 	/* Inicializaçao das estruturas, onde threads sao as threads do pool (MAXTHREADS)
 	 * thread_data é a estrutura a ser passada como argumento para a função que as 
@@ -282,7 +240,7 @@ int main (int argc, char *argv[])
 	
 	/* Inicializa o pool de threads */
 	for(i=0; i<MAXTHREADS; i++){
-		t=pthread_create(&threads[i],attr,exec_thread,(void *)&thread_data[i]);
+		t=pthread_create(&threads[i],&attr,exec_thread,(void *)&thread_data[i]);
 		if(t){
 			printf("ERRO; codigo de retorno de pthread_create() eh %d\n", t);
 			exit(-1);
@@ -299,12 +257,11 @@ int main (int argc, char *argv[])
 		/* Se já deu o tempo, roda mais uma iteração do jogo */
 		if( (t1 - t0)/(double)CLOCKS_PER_SEC > 1.0/fps )
 		{
-			/* Define o numero de celulas a serem tratadas */
-			cel_livres = nlin * ncol;
+			/* Espera até as threads acabarem com as celulas da lista */
+			for(i=0; i<nlin; i++)
+				for(j=0; j<ncol; j++)
+					pthread_mutex_lock(&(matr_cel[i][j].mutex));
 			
-			/* Modifica o próximo tabuleiro */
-			//processa_sem_threads(); // Descomentar para fins de depuração
-			processa_com_pool();
 			
 			/* Imprime */
 			imprime();
@@ -318,6 +275,9 @@ int main (int argc, char *argv[])
 			matriz_tmp = matriz;
 			matriz = matriz_prox;
 			matriz_prox = matriz_tmp;
+			
+			/* Organiza a lista de celulas a serem tratadas */
+			organiza_cel_livres(matr_cel);
 			
 			/* Incrementa o contador de iterações */
 			iter++;
