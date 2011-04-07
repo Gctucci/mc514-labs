@@ -133,17 +133,22 @@ void *exec_thread(void *threadarg){
 void imprime()	{
 	clear();
 	int i,j;
-	for(i=0; i<nlin; i++)
+	if(nlin<MAX_LIN && ncol<MAX_COL)
 	{
-		for(j=0; j<ncol; j++)
+		for(i=0; i<nlin; i++)
 		{
-			if(matriz[i][j])
-				printw("# ");
-			else
-				printw("_ ");
+			for(j=0; j<ncol; j++)
+			{
+				if(matriz[i][j])
+					printw("# ");
+				else
+					printw("_ ");
+			}
+			printw("\n");
 		}
-		printw("\n");
 	}
+	else
+		printw("Imagem muito grande para ser exibida, apenas o gif sera gerado\n\n");
 	
 	printw("iter: \t%d\n", iter);
 	printw("fps: \t%.1f\n", fps);
