@@ -100,7 +100,7 @@ int conta_celula(int lin, int col){
 void *exec_thread(void *threadarg){
 	int lin,col;
 	Ponto *cel=NULL;
-	while(1){
+	while(!sair){
 		// Acessa a lista de celulas
 		pthread_mutex_lock(&mutex_lista);
 		if(lista_cel!=NULL){
@@ -124,6 +124,7 @@ void *exec_thread(void *threadarg){
 		else
 			pthread_mutex_unlock(&mutex_lista);
 	}
+	return NULL;
 }
 
 /**
@@ -202,10 +203,11 @@ int main (int argc, char *argv[])
 	data* thread_data;	    /* ponteiro para os dados que vao ser passados - um para cada thread*/
 	int **matriz_tmp;       /* ponteiro auxiliar para a troca entre as matrizes*/
 	clock_t t0=0, t1=0;    	/* variáveis para controle do tempo*/
-	int sair=0;             /* variável que verifica se é para sair ou não do programa*/
 	char c;
 	char tmp[100];
 	pthread_attr_t attr;
+	void *status;
+	int rc;
 	Ponto **matr_cel;       /* matriz de structs de pontos, a ser usado para a lista de celulas */
 	pthread_mutex_init(&mutex_num, NULL);
 	pthread_mutex_init(&mutex_lista, NULL);
@@ -308,9 +310,16 @@ int main (int argc, char *argv[])
 	sprintf(tmp, "convert -scale %dx%d -delay 20 -loop 0 tmp/pbm*.pbm out.gif", 4*nlin, 4*ncol);
 	system(tmp);
 	printf("Arquivo out.gif gerado.\n");
+
+	/* Encerra as threads */
+	for(i=0; i<MAXTHREADS; i++){
+		rc = pthread_join(threads[i], &status);
+		if (rc) {
+			printf("ERRO; codigo de retorno de pthread_join() is %d\n", rc);
+			exit(-1);
+		}
+	}
 	
-	for(i=0;i<MAXTHREADS;i++)
-		pthread_kill(threads[i],TERMINATE);
 	/* Libera a memória utilizada
 	 * obs: A biblioteca ncurses causa alguns leaks intencionais.
 	 */
