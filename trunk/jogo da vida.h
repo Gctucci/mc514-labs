@@ -3,7 +3,6 @@
 #include<ncurses.h>
 #include<pthread.h>
 #include<time.h>
-#include<signal.h>
 #include"pbm.h"
 
 #define MORTA 0 
@@ -13,7 +12,7 @@
 #define FPS 3.0
 #define CHAR 10
 #define MAXTHREADS 5
-#define TERMINATE 15
+
 /**
  * Estrutura de argumentos de uma thread
  */
@@ -41,6 +40,7 @@ pthread_mutex_t mutex_lista;    /** mutex da lista de células */
 int num_cel=0;                  /** número de células livres */
 pthread_mutex_t mutex_num;      /** mutex do número de células livres */
 pthread_cond_t cond_num;        /** cond do número de células livres */
+int sair=0;                     /** mostra se é pra sair do programa ou não */
 
 
 /**
@@ -112,6 +112,3 @@ void processa_area(int lin_0, int lin_1, int col_0, int col_1, pthread_t** threa
  * Processa a matriz sem usar threads (debug)
  */
 void processa_sem_threads();
-
-int pthread_kill(pthread_t thread, int signal);
-
