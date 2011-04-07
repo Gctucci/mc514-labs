@@ -12,6 +12,8 @@
 #define FPS 3.0
 #define CHAR 10
 #define MAXTHREADS 5
+#define MAX_COL 600
+#define MAX_LIN 50
 
 /**
  * Estrutura de argumentos de uma thread
