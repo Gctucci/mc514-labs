@@ -147,6 +147,7 @@ void imprime()	{
 	
 	printw("iter: \t%d\n", iter);
 	printw("fps: \t%.1f\n", fps);
+	printw("fps real: \t%.1f\n", fps_real);
 	printw("num_cel: \t%d\n", num_cel);
 	printw("Pressione qualquer tecla para sair.\n");
 	refresh();
@@ -277,6 +278,9 @@ int main (int argc, char *argv[])
 			{
 				pthread_cond_wait(&cond_num, &mutex_num);
 			}
+			
+			/* Calcula a quantos FPS reais está rodando */
+			fps_real = (double)CLOCKS_PER_SEC/(t1 - t0);
 			
 			/* Imprime */
 			imprime();

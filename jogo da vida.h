@@ -34,7 +34,8 @@ int **matriz;	                /** matriz com o tabuleiro da posição/geração 
 int **matriz_prox;              /** matriz auxiliar para criar um tabuleiro de próxima geração */
 int nlin,ncol;	                /** número de linhas e colunas do tabuleiro */
 int iter=0;                     /** número de iterações do jogo da vida */
-float fps = FPS;                /** número de frames por segundo */
+float fps = FPS;                /** número de frames por segundo(em tese)*/
+float fps_real=0;                /** número de frames por segundo real */
 Ponto *lista_cel=NULL;          /** lista de células a serem tratadas */
 pthread_mutex_t mutex_lista;    /** mutex da lista de células */
 int num_cel=0;                  /** número de células livres */
