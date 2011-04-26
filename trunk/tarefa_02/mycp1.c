@@ -3,7 +3,6 @@
 int mycp1(char** files){
 	
 	int indescr, outdescr, reader, writer;
-	DIR *dir;
 	char buffer[MAXBUFF];
 
 	if(files == NULL){
