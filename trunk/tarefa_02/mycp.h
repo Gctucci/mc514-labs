@@ -1,3 +1,4 @@
+#include "apue.h"
 #include<fcntl.h>
 #include<stdio.h>
 #include<stdlib.h>
@@ -5,6 +6,7 @@
 #include<sys/types.h>
 #include<sys/stat.h>
 #include<dirent.h>
+#include<string.h>
 
 #define MAXBUFF 4096
 #define OUTPUT 0700
@@ -13,3 +15,7 @@
 /**Função de cp mais básica, que apenas muda o diretório corrente,
 cria um fd e copia o conteúdo para o mesmo*/
 int mycp1( char **files);
+
+
+
+int mycp2( char **files);
