@@ -21,12 +21,12 @@ int main(int argc, char** argv){
 		mycp1(argv);
 	}
 	else {
-		if(argv[3] == "mycp1"){
+		if(!strcmp(argv[3],"mycp1")){
 			mycp1(argv);
 		}
-		/*else if(argv[3] == "mycp2"){
+		else if(!strcmp(argv[3],"mycp2")){
 			mycp2(argv);
-		}
+		}/*
 		else if(argv[3] == "mycp3"){
 			mycp3(argv);
 		}
