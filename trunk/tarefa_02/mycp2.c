@@ -49,7 +49,7 @@ int mycp2(char** files){
 		close(indescr); close(outdescr);
 		
 		if (ntowrite == 0){
-			printf("File successfuly copied!\n"); 
+			printf("File successfully copied!\n"); 
 			exit(0);
 		} 
 		else{

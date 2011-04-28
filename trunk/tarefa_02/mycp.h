@@ -5,6 +5,7 @@
 #include<unistd.h>
 #include<sys/types.h>
 #include<sys/stat.h>
+#include<sys/time.h>
 #include<dirent.h>
 #include<string.h>
 
@@ -17,5 +18,13 @@ cria um fd e copia o conteúdo para o mesmo*/
 int mycp1( char **files);
 
 
-
+/**Função de cp que usa a opção não bloqueante - O_NONBLOCK*/
 int mycp2( char **files);
+
+
+
+/**Função de cp que usa a função select() para monitorar os file descriptors*/
+int mycp3(char **files);
+
+
+int mycp4(char **files);
