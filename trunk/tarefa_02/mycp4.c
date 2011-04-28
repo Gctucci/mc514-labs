@@ -1,4 +1,5 @@
 #include "mycp.h"
+#include <aio.h>
 
 /**
  * Função que copia um arquivo utilizando as funções da aio.h
@@ -33,13 +34,25 @@ int mycp4(char** files){
 		exit(-1);
 	}
 
+	memset(&data_in, 0, sizeof(aiocb));
+	data_in.aio_nbytes = MAXBUFF;
+	data_in.aio_fildes = indescr;
+	data_in.aio_offset = 0;
+	data_in.aio_buf = buffer;
+
+	memset(&data_out, 0, sizeof(aiocb));
+	data_out.aio_nbytes = MAXBUFF;
+	data_out.aio_fildes = outdescr;
+	data_out.aio_offset = 0;
+	data_out.aio_buf = buffer;
+
 	/*Loop que copia o arquivo*/
 	while (TRUE) {
-		reader = aio_read(indescr, buffer, MAXBUFF); /* le um bloco de dados */
+		reader = aio_read(&data_in); /* le um bloco de dados */
 
 		if (reader <= 0) break; /* Se ocorrer um erro durante a cópia, ou o arquivo acabar, o loop pára.*/
 
-		writer = aio_write(outdescr, buffer, reader); /*escreve um bloco de dados*/
+		writer = aio_write(&data_out); /*escreve um bloco de dados*/
 
 		if (writer <= 0){
 			printf("Error while writing file: File could not be written.\n");
