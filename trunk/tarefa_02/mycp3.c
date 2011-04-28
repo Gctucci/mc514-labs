@@ -2,7 +2,7 @@
 #define MAX(a,b) ((a < b) ?  (b) : (a))
 
 /**
- * Função que copia um arquivo utilizando select()
+ * Função de cp que usa a função select() para monitorar os file descriptors
  * 
  * @param files Nomes dos arquivos de origem e destino
  */

@@ -1,7 +1,7 @@
 #include "mycp.h"
 
 /**
- * Função que copia um arquivo utilizando um processo único, sem bloqueio
+ * Função de cp que usa a opção não bloqueante - O_NONBLOCK
  * 
  * @param files Nomes dos arquivos de origem e destino
  */
