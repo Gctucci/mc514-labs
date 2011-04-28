@@ -1,6 +1,6 @@
 .PHONY : test doc mem
 
-CFLAGS=-Wall -pedantic -std=c99 -lpthread -g
+CFLAGS=-Wall -pedantic -std=c99 -lpthread -lrt -g
 
 
 make:
