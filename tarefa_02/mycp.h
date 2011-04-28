@@ -9,6 +9,7 @@
 #include<dirent.h>
 #include<string.h>
 #include<aio.h>
+#include <errno.h>
 
 #define MAXBUFF 4096
 #define OUTPUT 0700
