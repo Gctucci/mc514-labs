@@ -8,6 +8,7 @@
 #include<sys/time.h>
 #include<dirent.h>
 #include<string.h>
+#include<aio.h>
 
 #define MAXBUFF 4096
 #define OUTPUT 0700
@@ -22,9 +23,9 @@ int mycp1( char **files);
 int mycp2( char **files);
 
 
-
 /**Função de cp que usa a função select() para monitorar os file descriptors*/
 int mycp3(char **files);
 
 
+/**Função que copia um arquivo utilizando as funções da aio.h*/
 int mycp4(char **files);

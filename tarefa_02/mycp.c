@@ -26,10 +26,10 @@ int main(int argc, char** argv){
 		}
 		else if(!strcmp(argv[3],"mycp3")){
 			mycp3(argv);
-		}/*
+		}
 		    else if(!strcmp(argv[3],"mycp4")){
 		    mycp4(argv);
-		    }*/
+		    }
 		else{
 			printf("ERROR: parameter not recognized;\n");
 			exit(-1);

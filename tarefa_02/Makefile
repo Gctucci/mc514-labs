@@ -4,10 +4,10 @@ CFLAGS=-Wall -pedantic -std=c99 -lpthread -g
 
 
 make:
-	-gcc $(CFLAGS) *.c -o mycp1
+	-gcc $(CFLAGS) *.c -o mycp
 
 test: drop_caches
-	-gdb mycp1
+	-gdb mycp
 
 doc:
 	-doxygen Doxyfile
@@ -15,7 +15,7 @@ doc:
 	-cp doc/latex/refman.pdf Relatório.pdf
 
 mem:
-	-valgrind --leak-check=full ./mycp1
+	-valgrind --leak-check=full ./mycp
 
 drop_caches:
 	-sudo echo 1 >/proc/sys/vm/drop_caches

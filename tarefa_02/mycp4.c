@@ -1,15 +1,16 @@
 #include "mycp.h"
 
 /**
- * Função de cp mais básica, que apenas muda o diretório corrente,
- * cria um fd e copia o conteúdo para o mesmo
+ * Função que copia um arquivo utilizando as funções da aio.h
  * 
  * @param files Nomes dos arquivos de origem e destino
  */
-int mycp1(char** files){
+int mycp4(char** files){
 
 	int indescr, outdescr, reader, writer;
 	char buffer[MAXBUFF];
+	aiocb data_in;
+	aiocb data_out;
 
 	if(files == NULL){
 		printf("Error while opening files: check if there any arguments were passed.\n");
@@ -34,11 +35,11 @@ int mycp1(char** files){
 
 	/*Loop que copia o arquivo*/
 	while (TRUE) {
-		reader = read(indescr, buffer, MAXBUFF); /* le um bloco de dados */
+		reader = aio_read(indescr, buffer, MAXBUFF); /* le um bloco de dados */
 
 		if (reader <= 0) break; /* Se ocorrer um erro durante a cópia, ou o arquivo acabar, o loop pára.*/
 
-		writer = write(outdescr, buffer, reader); /*escreve um bloco de dados*/
+		writer = aio_write(outdescr, buffer, reader); /*escreve um bloco de dados*/
 
 		if (writer <= 0){
 			printf("Error while writing file: File could not be written.\n");
