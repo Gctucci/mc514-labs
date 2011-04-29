@@ -8,8 +8,7 @@
 #include<sys/time.h>
 #include<dirent.h>
 #include<string.h>
-#include<aio.h>
-#include <errno.h>
+#include <sys/mman.h>
 
 #define MAXBUFF 4096
 #define OUTPUT 0700
@@ -28,5 +27,5 @@ int mycp2( char **files);
 int mycp3(char **files);
 
 
-/**Função que copia um arquivo utilizando as funções da aio.h*/
+/**Função que copia um arquivo utilizando as funções da mman.h*/
 int mycp4(char **files);
