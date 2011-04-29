@@ -82,6 +82,16 @@ usando I/O não bloqueante, select() ou mmap().
 Para maiores informações, verifique a estrutura dos arquivos na página Doxygen correspondente.
 
 @page page4 Análise Estatística
+
+Foi realizada uma série de medições de tempo para cada função mycp, que resultou na seguinte análise:
+	Para o arquivo copiado, as diferenças entre mycp1(), mycp2() foram muito pequenas (algumas casas decimais de diferença);
+	Em termos de tempo real, mycp1() perde para mycp2(), porém em tempo de user mycp2() possui um desempenho ligeiramente menor.
+	
+	A função mycp2() se mostrou muito próxima do desempenho do cp padrão, porém com tempo sys ligeiramente maior.
+
+	A função mycp3() entretanto, mostrou um desempenho ligeiramente pior quando comparado às anteriores, devido ao uso da função select().
+
+	A função mycp4() conseguiu uma ligeira melhora em tempo real, porém ao custo de um tempo de user maior. 
  * 
  * 
  */
