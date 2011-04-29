@@ -8,29 +8,23 @@
 
 @page page0 Introdução
 
-O Jogo da Vida é um jogo desenvolvido pelo matemático John Horton Conway,
-na qual dispoe-se um tabuleiro e celulas autômatas no mesmo, seguindo a seguinte
-regra de sobrevivência para a próxima geração:
-
-    @li Uma célula viva com menos de dois vizinhos morre (solidão).
-    @li Uma célula viva com mais de três vizinhos morre (superlotação).
-    @li Uma célula com dois ou três vizinhos sobrevive para a próxima geração.
-    @li Uma célula morta com exatamente três vizinhos renasce. 
-
-Tendo isso em mente, o projeto proposto visava a utilização do conceito de threads
-para implementar o jogo da vida.
+O projeto desenvolvido tem por base mensurar e implementar diferentes tipos de IO, e verificar seu impacto quanto
+ao tempo de acesso e execução.\ Para este experimento foi implementado várias formas de copiar arquivos para outros
+arquivos (diretórios).\ Após essa implementação, mensura-se o tempo para cada uma, rodando várias vezes o programa
+para um mesmo arquivo, e confrontam-se essas estatísticas de cada implementação com o comando cp nativo dos sistemas Unix. 
 
 
 @page page1 Decisões de Projeto
 
-Como forma de iniciar o jogo, optamos por ler a configuração inicial de um arquivo
-de imagens simples (.pbm). Essa leitura é realizada utilizando a libpbm. Portanto, o 
-código é flexível quanto ao tamanho do tabuleiro, com sua visualização limitada apenas pelo tamanho da 
-tela do terminal, onde o programa é executado.
+Como forma de implementar as diferentes opções de IO, optamos por criar 4 funções diferentes, que serão chamadas por linha
+de comando na forma ./mycp [nome_do_arquivo] [nome_do_destino] [função].
+Caso o parâmetro [função] não seja passado, o programa utiliza a implementação padrão da função mycp1().
 
-Para mostrar cada iteração do jogo, utilizamos a biblioteca ncurses, que fornece
-funcionalidades de exibição e atualização da tela, além de entrada do teclado, para
-programas em modo texto.
+Para medirmos o tempo de cada execução, usamos o comando time. Para limpar o cache após cada execução, executamos drop_cache,
+conforme definido na especificação do trabalho.
+
+Afim de facilitar a obtenção de várias medidas de tempo, optamos por escrever um script (testar.sh) que irá executar o comando várias
+vezes, para melhorar as estatísticas de tempo.
 
 Optamos por usar um makefile para compilar, depurar e gerar a documentação do programa.
 	@li Compilar: make
@@ -41,75 +35,53 @@ Optamos por usar um makefile para compilar, depurar e gerar a documentação do 
 O comando "make doc" gera uma documentação em html e em latex (que depois é convertida em
 um relatório -este- em pdf) com a ajuda da ferramenta Doxygen, na pasta doc.
 
-OBS: Ao executar o comando "make mem", surgirão alguns leaks de memória. Entretanto, os mesmos
-são decorrentes da utilização da biblioteca ncurses, não havendo relação com o trabalho em si. 
 
-O jogo é representado por duas matrizes, a da configuração atual e a da próxima, onde
-será escrito o resultado da aplicação das regras do jogo mais uma vez.
+Na função mycp1() foi utilizada a implementação mais simples de read() e write() com I/O bloqueante.
+Essa função simplesmente abre um arquivo de leitura, executa um chdir() e depois abre o arquivo de escrita,
+escrevendo continuamente (loop) em blocos de 4kb.
 
-Decidimos utilizar uma thread para cada célula da matriz do jogo. Quando o número de 
-células é muito grande, dividimos a matriz em 4 partes, recursivamente. Ao ser criada, a thread 
-recebe uma struct com um id único, a posição da mesma no tabuleiro (linha,coluna). A função main() 
-aguarda todas as threads acabarem e só então atualiza a tela.
+Na função mycp2() foi utilizada a implementação com I/O não bloqueante.
+Essa função implementa as funções set_fl() e clr_fl(), que setam/cancelam o I/O como sendo não bloqueante
+através da utilização da opção O_NONBLOCK, executando um loop como mycp1().
 
-Cada thread verifica se a célula correspondente irá viver ou morrer no próximo turno, atualizando
-então o próximo tabuleiro. A função main() é então tratada como uma thread mãe,
-e espera todas as threads acabarem para atualizar a tela (join). Ao fim da atualização, as threads morrem,
-a main() incrementa um contador iter (número de iterações) e troca os tabuleiros (o da geração atual passa a ser
-o de próxima geração e vice-versa).
+Na função mycp3() foi utilizada a implementação com a utilização de select(), que verifica a disponibilidade
+de descritores de arquivos previamente setados para serem observados (um para leitura e outro para escrita),
+para que alguma operação de I/O possa ser executada. Observou-se um desempenho menor (tempo de execução maior)
+nesta função em relação às demais.
 
-Ao fim de uma iteração completa (criar threads - executar código - atualizar tela - trocar tabuleiro - matar threads),
-a main() executa novamente o ciclo, até o usuário digitar uma tecla. Esse ciclo tem
-sua execução limitada pelo número de frames por segundo, que pode ser lido por parâmetro.
-Essa verificação é realizada com o auxílio da biblioteca time.h.
-Caso o parâmetro não seja passado, o programa assume uma atualização de 3.0 fps.
+Na função mycp4() foi utilizada o conceito de mmaps (Memory-Mapped I/O), de forma que lê-se o arquivo em um único
+comando, sabendo previamente o seu tamanho através da função fstat().
+Por não haverem loops na sua execução, nem o comando read() - potencialmente bloqueável - esta função apresentou um
+desempenho ligeiramente melhor que as demais.
 
-Enquanto o programa executa o jogo da vida, ele gera arquivos .pbm na pasta tmp, indicando 
-os estados do tabuleiro em um dado momento. Ao fim do programa (o usuário pressiona uma 
-tecla), um comando da biblioteca imagemagick na main(), concatena as imagens geradas em tmp
-e as converte em um .gif (animação do jogo).
 
 @page page2 Dificuldades
 
-Um dos problemas enfrentados na configuração inicial do programa foi a passagem do tabuleiro como
-um atributo de cada thread, o que gerou problemas no controle de concorrência do programa.
-Optou-se então por utilizar variáveis globais para os tabuleiros, número de linha e colunas do mesmo.
-Dessa forma, cada thread atua apenas na sua posição.
+As principais dificuldades enfrentadas no trabalho foi a definição e implementação eficiente de uma função mycp4()
+com desempenho melhor (na média) do que as demais. Inicialmente pensou-se em uma implementação de I/O assíncrono,
+utilizando a biblioteca aio.h e a função aio_read() e aio_write(). Porém, foi difícil implementá-la com exatidão, uma 
+vez que a documentação sobre as funções era pouco clara, e a implementação nunca copiava os arquivos de forma correta
+(geralmente copiava-se apenas um bloco de 4kb, mesmo executando-se a operação em loop).
 
-Outra grande dificuldade foi o limite do número de threads, pois para imagens (arquivos) muito grandes,
-as threads não podiam ser criadas uma para cada célula. Assim, criou-se uma função que dividia a imagem
-recursivamente até um número máximo especificado de threads poder ser criado (no caso 300).
 
-Houve um trabalho razoável na criação dos algoritmos de determinação se a célula ia morrer ou viver.
-Inicialmente, fizemos um comando for que verificava os vizinhos de uma determinada posição de forma incorreta.
-Posteriormente, as verificações foram melhoradas.
-
-Houve dificuldades em achar uma biblioteca apropriada para a criação do gif animado, sendo todas demasiado
-complexas, fugindo ao escopo do tempo do trabalho. Portando, optamos por gerar imagens simples (pbm)
-e uní-las usando uma ferramenta de linha de comando, do projeto imagemagick.
+Dessa forma, por razões de facilidade de implementação, utilizou-se a biblioteca mmap.h, e as funções mmap() e memcpy(),
+evitando assim um loop na execução e melhorando o desempenho geral da função.
 
 
 
 @page page3 Estrutura do Código
 
-O código foi dividido em 4 arquivos principais: dois arquivos .h (pbm.h e jogo da vida.h)
-e dois arquivos . c (jogo da vida.c e pbm.c).
+O código foi dividido em 4 arquivos principais: um arquivo .h (mycp.h), contendo as definições das funções e bibliotecas utilizadas,
+e cinco arquivos . c (mycp.c, mycp1.c, mycp2.c, mycp3.c, mycp4.c).
 
-O código referente aos arquivos jogo da vida.* trata da implementação do jogo propriamente dita,
-com a criação/atualização de tabuleiros e de dispor a imagem na tela.
+O tamanho da blocagem utilizados para as operações de leitura está definido em mycp.h : MAXBUFF.
 
-O código dos arquivos pbm.* trata da leitura/conversão das imagens de entrada em uma matriz de inteiros
-para a execução do jogo.
-A funçao main() está localizada no arquivo jogo da vida.c.
-
-Na main() estão as funções que verificarão se há células vivas vizinhas a uma determinada célula, e as funções que tratam de, uma vez verificadas as células vizinhas (conta_celula()), calcula-se se a célula atual irá viver e a escreve em outro tabuleiro (valida_celula()). Na main também está a função que trata o recebimento de imagens muito grandes, dividindo-a em 4 partes recursivamente (processa_area()). Há uma função que diz o trabalho as threads ao serem criadas - threads são criadas na main() - executando assim o trabalho que as threads devem realizar (exec_thread()). 
-
-Na main() também estão as funções de imprimir na tela (imprime()),
-algumas funções extras de debug (imprime_soma()) e também uma função que recebe e trata os parâmetros passados na linha de comando (config()). 
-
-No arquivo pbm.c está a função pbm(), que pega uma imagem a converte apropriadamente para a execução do programa.
+Cada arquivo mycp*.c contém uma única função que implementa alguma opção de cópia/escrita de arquivos, seja por meio de loops de escrita,
+usando I/O não bloqueante, select() ou mmap().
 
 Para maiores informações, verifique a estrutura dos arquivos na página Doxygen correspondente.
+
+@page page4 Análise Estatística
  * 
  * 
  */
