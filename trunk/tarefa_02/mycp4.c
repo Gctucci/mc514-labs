@@ -7,60 +7,44 @@
  * @param files Nomes dos arquivos de origem e destino
  */
 int mycp4(char** files){
-
-	
+	int fdin, fdout;
 	void *src, *dst;
 	struct stat statbuf;
-	int indescr, outdescr;
-	char buffer[MAXBUFF];
 
-	if(files == NULL){
-		printf("Error while opening files: check if there any arguments were passed.\n");
-		exit(-1);
-	}
-
-	indescr = open(files[1], O_RDONLY);
-
-
-	if (indescr < 0){ 
-		printf("ERROR: File cannot be opened.\n");
-		exit(-1);
-	}
-
+	if ((fdin = open(files[1], O_RDONLY)) < 0){
+		printf("Can't open %s for reading", files[1]);
+	}	
 	chdir(files[2]);
-	outdescr = open(files[1], O_RDWR | O_CREAT | O_TRUNC,FILE_MODE);
+	fdout = open(files[1], O_RDWR | O_CREAT | O_TRUNC,FILE_MODE);
+	if (fstat(fdin, &statbuf) < 0){ /* need size of input file */
+		printf("Fstat error.\n");
+		exit(-1);
+	}
+	/* set size of output file */
+	if (lseek(fdout, statbuf.st_size - 1, SEEK_SET) == -1){
+		printf("Lseek error.\n");
+		exit(-1);
+	}
+	if (write(fdout, "", 1) != 1){
+		printf("Error while writing file. Please try again.\n");
+		exit(-1);
+	}
+	if ((src = mmap(0, statbuf.st_size, PROT_READ, MAP_SHARED,
+	fdin, 0)) == MAP_FAILED){
+		printf("Mmap error for input.\n");
+		exit(-1);
+	}
+	if ((dst = mmap(0, statbuf.st_size, PROT_READ | PROT_WRITE,
+	MAP_SHARED, fdout, 0)) == MAP_FAILED){
+		printf("Mmap error for output\n");
+		exit(-1);
+	}
+	memcpy(dst, src, statbuf.st_size); /* does the file copy */
+	
 
-	if (outdescr < 0){ 
-		printf("ERROR: File cannot be created.\n");
-		exit(-1);
-	}
-	if (fstat(indescr, &statbuf) < 0){ /* need size of input file */
-		printf("ERROR: Could not determine the size of file.\n");
-		exit(-1);
-	}
-	while(TRUE){
-		/* set size of output file */
-		if (lseek(outdescr, statbuf.st_size - 1, SEEK_SET) == -1)
-			break;
-		if (write(outdescr,buffer, 1) != 1){
-			printf("Error while writing file: File could not be written.\n");
-			exit(-1);
-		}
-		src = mmap(0, statbuf.st_size, PROT_READ, MAP_SHARED,indescr, 0);
-		if (src == MAP_FAILED){
-			printf("ERROR: mmap failed for input.\n");	
-			exit(-1);
-		}
-		dst = mmap(0, statbuf.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, outdescr, 0);
-		if (dst == MAP_FAILED){
-			printf("ERROR: mmap failed for output.\n");	
-			exit(-1);
-		}
-		memcpy(dst, src, statbuf.st_size); /* does the file copy */
-	}
 	/*Fechando os arquivos/diretórios*/
-	close(indescr); 
-	close(outdescr);
+	close(fdin); 
+	close(fdout);
 	
 	printf("File successfully copied!\n"); 
 
