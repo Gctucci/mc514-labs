@@ -9,7 +9,7 @@
 @page page0 Introdução
 
 O projeto desenvolvido tem por base mensurar e implementar diferentes tipos de IO, e verificar seu impacto quanto
-ao tempo de acesso e execução.\ Para este experimento foi implementado várias formas de copiar arquivos para outros
+ao tempo de acesso e execução.\ Para este experimento foram implementadas várias formas de copiar arquivos para outros
 arquivos (diretórios).\ Após essa implementação, mensura-se o tempo para cada uma, rodando várias vezes o programa
 para um mesmo arquivo, e confrontam-se essas estatísticas de cada implementação com o comando cp nativo dos sistemas Unix. 
 
@@ -21,10 +21,12 @@ de comando na forma ./mycp [nome_do_arquivo] [nome_do_destino] [função].
 Caso o parâmetro [função] não seja passado, o programa utiliza a implementação padrão da função mycp1().
 
 Para medirmos o tempo de cada execução, usamos o comando time. Para limpar o cache após cada execução, executamos drop_cache,
-conforme definido na especificação do trabalho.
+conforme definido na especificação do trabalho. Incluímos uma versão local, para quando o projeto não for executar nos laboratórios 
+do IC.
 
-Afim de facilitar a obtenção de várias medidas de tempo, optamos por escrever um script (testar.sh) que irá executar o comando várias
-vezes, para melhorar as estatísticas de tempo.
+Afim de facilitar a obtenção de várias medidas de tempo, optamos por escrever um script que irá executar o comando várias vezes, 
+para melhorar as estatísticas de tempo. Sua execução é na forma ./testar [arquivo a ser copiado] [destino] [número da implementação] 
+[quantidade de execuções], sendo o valor 0 utilizado para o cp original do unix.
 
 Optamos por usar um makefile para compilar, depurar e gerar a documentação do programa.
 	@li Compilar: make
@@ -54,15 +56,22 @@ comando, sabendo previamente o seu tamanho através da função fstat().
 Por não haverem loops na sua execução, nem o comando read() - potencialmente bloqueável - esta função apresentou um
 desempenho ligeiramente melhor que as demais.
 
+Na função mycp5() está uma tentativa de Kernel Asynchonous I/O, implementada pela biblioteca aio.h, tal como explicada nessa
+página: 
+http://www.ibm.com/developerworks/linux/library/l-async/?ca=dgr-lnxw16UsingPOISIXAIOAPI. Entretanto, algumas 
+dificuldades impediram sua conclusão(explicadas na próxima sessão).
+
+
 
 @page page2 Dificuldades
 
 As principais dificuldades enfrentadas no trabalho foi a definição e implementação eficiente de uma função mycp4()
 com desempenho melhor (na média) do que as demais. Inicialmente pensou-se em uma implementação de I/O assíncrono,
-utilizando a biblioteca aio.h e a função aio_read() e aio_write(). Porém, foi difícil implementá-la com exatidão, uma 
-vez que a documentação sobre as funções era pouco clara, e a implementação nunca copiava os arquivos de forma correta
-(geralmente copiava-se apenas um bloco de 4kb, mesmo executando-se a operação em loop).
-
+utilizando a biblioteca aio.h e as funções aio_read() e aio_write(). Porém, foi difícil implementá-la com exatidão, uma 
+vez que a documentação sobre as funções era bem escassa. A função nunca copiava os arquivos de forma correta, geralmente 
+copiando apenas um bloco de 4kb, mesmo executando-se a operação em loop. Ao se manipular o offset, chegamos ao ponto de 
+criar um arquivo do mesmo tamanho do original, mas por algum motivo ele continha lacunas em branco, mesmo se o offset não 
+fosse alterado no caso de não haver leitura.
 
 Dessa forma, por razões de facilidade de implementação, utilizou-se a biblioteca mmap.h, e as funções mmap() e memcpy(),
 evitando assim um loop na execução e melhorando o desempenho geral da função.
@@ -83,7 +92,8 @@ Para maiores informações, verifique a estrutura dos arquivos na página Doxyge
 
 @page page4 Análise Estatística
 
-Foi realizada uma série de medições de tempo para cada função mycp, que resultou na seguinte análise:
+Primeiramente, foi realizada uma série de medições de tempo individualmente para cada função mycp, que resultou na seguinte análise:
+ 
 	Para o arquivo copiado, as diferenças entre mycp1(), mycp2() foram muito pequenas (algumas casas decimais de diferença);
 	Em termos de tempo real, mycp1() perde para mycp2(), porém em tempo de user mycp2() possui um desempenho ligeiramente menor.
 	
@@ -92,6 +102,19 @@ Foi realizada uma série de medições de tempo para cada função mycp, que res
 	A função mycp3() entretanto, mostrou um desempenho ligeiramente pior quando comparado às anteriores, devido ao uso da função select().
 
 	A função mycp4() conseguiu uma ligeira melhora em tempo real, porém ao custo de um tempo de user maior. 
+
+Depois de concluído o script de teste em massa, fizemos 3 benchmarks:
+
+O primeiro, com um arquivo de 177,6MB, mostrou um desempenho muito mais lento da mycp4, ao contrário do observado pelos testes anteriores.
+O baixíssimo tempo de execução do cp original se deve a um erro do script de teste.
+
+O segundo benchmark foi realizado com um arquivo vazio, mostrando que o cp do unix tem o maior overhead inicial, com mais que o dobro do
+mycp4.
+
+O terceiro benchmark foi feito corrigindo os erros do primeiro, e mostrou resultados semelhantes, com um tempo de execução do mycp4 sendo
+muito alto, o que indica algum bug na implementação que não conseguimos encontrar, ou talvez alguma diferença no funcionamento do programa 
+em diferentes computadores.
+
  * 
  * 
  */
