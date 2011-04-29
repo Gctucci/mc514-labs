@@ -13,17 +13,18 @@ else
 	do
 		# Limpa o cache
 		sudo ./drop-caches
+		
 		# Executa, salvando os tempos para um arquivo
 		if [ $cp != 0 ]
 		then
 			(time ./mycp $arq $dest mycp$cp) 2> tmp
 		else
-			(time cp $arq $dest mycp$cp) 2> tmp
+			(time cp $arq $dest) 2> tmp
 		fi
 		
 		# Pega as variáveis
-		echo `cat tmp | grep -e "real" | cut -f 2 | cut -d "m" -f 1` `cat tmp | grep -e "real" | cut -f 2 | cut -d "m" -f 2 | cut -d "s" -f 1` >> real$cp
-		echo `cat tmp | grep -e "user" | cut -f 2 | cut -d "m" -f 1` `cat tmp | grep -e "user" | cut -f 2 | cut -d "m" -f 2 | cut -d "s" -f 1` >> user$cp
-		echo `cat tmp | grep -e "sys" | cut -f 2 | cut -d "m" -f 1` `cat tmp | grep -e "sys" | cut -f 2 | cut -d "m" -f 2 | cut -d "s" -f 1` >> sys$cp
+		echo `cat tmp | grep -e "real" | cut -f 2 | cut -d "m" -f 1` `cat tmp | grep -e "real" | cut -f 2 | cut -d "m" -f 2 | cut -d "s" -f 1 | sed "s/\./,/g"` >> dados/real$cp
+		echo `cat tmp | grep -e "user" | cut -f 2 | cut -d "m" -f 1` `cat tmp | grep -e "user" | cut -f 2 | cut -d "m" -f 2 | cut -d "s" -f 1 | sed "s/\./,/g"` >> dados/user$cp
+		echo `cat tmp | grep -e "sys" | cut -f 2 | cut -d "m" -f 1` `cat tmp | grep -e "sys" | cut -f 2 | cut -d "m" -f 2 | cut -d "s" -f 1 | sed "s/\./,/g"` >> dados/sys$cp
 	done
 fi
