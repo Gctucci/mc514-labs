@@ -1,0 +1,41 @@
+#graph, #labels
+{
+	position:relative;
+	width:660px;
+	height:216px;
+	margin:8px;
+	padding:0;	
+}
+
+#graph ul
+{
+	position:absolute;
+	top:0;
+	left:32px;
+	display:block;
+	width:600px;
+	height:200px;
+	background-color:white;
+	border-left:1px solid black;
+	border-bottom:1px solid black;	
+	margin:0;
+}
+
+#graph li
+{
+	list-style:none;
+	position:absolute;	
+	width:40px;
+	text-align:center;
+	border:1px solid black;
+	visibility: hidden;
+	background-image:url(bar-shaded.png);
+	background-repeat:repeat-y;
+}
+
+#labels
+{
+	height: 15px;
+	font-size:80%;
+	background: white;
+}
