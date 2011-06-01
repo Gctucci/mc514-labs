@@ -1,1 +1,7 @@
+O script recebe:
+- Na primeira linha, o título do histograma
+- Depois, uma série de números, um por linha
+
+O html gerado deve ser colocado na pasta tarefa_03, não aqui.
+
 Baseado no histograma encontrado em http://www.xul.fr/en/css/histogram.php

@@ -29,7 +29,7 @@
 	text-align:center;
 	border:1px solid black;
 	visibility: hidden;
-	background-image:url(bar-shaded.png);
+	background-image:url(histograma/bar-shaded.png);
 	background-repeat:repeat-y;
 }
 
