@@ -1,5 +1,5 @@
 require 'ffi'
-#require 'ext2fs'
+require 'ext2fs'
 
 if ARGV.count < 2
 	puts "Uso: ruby dados.rb [opção] [arquivo]"
@@ -10,6 +10,7 @@ if ARGV.count < 2
 else
 	if ARGV[0].to_i == 1
 		puts "Histograma de fragmentação de blocos alocados em no. de segmentos"
+		node = Ext2fs::Ext2_inode.new
 	elsif ARGV[0].to_i == 2
 		puts "Histograma de tamanhos de arquivos em blocos de alocação"
 	else
