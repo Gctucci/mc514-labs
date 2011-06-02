@@ -309,6 +309,7 @@ module Ext2fs
 		)
 	end
 	
+	
 	###
 	#  ext2fs.h
 	#  Contém as funções
@@ -316,5 +317,5 @@ module Ext2fs
 	
 	# extern errcode_t ext2fs_open_inode_scan(ext2_filsys fs, int buffer_blocks,
 	# ext2_inode_scan *ret_scan);
-	attach_function :ext2fs_open_inode_scan, [:pointer, :int, :pointer], :pointer
+	attach_function :ext2fs_open_inode_scan, [Ext2_filsys, :int, Ext2_inode_scan], :pointer
 end
