@@ -6,6 +6,7 @@ module Ext2fs
 	extend FFI::Library
 	ffi_lib "/usr/lib/libext2fs.so"
 	
+	Errcode_t = :long
 	###
 	#  ext2_fs.h
 	#  Contém as estruturas do inode e do superbloco
@@ -314,6 +315,50 @@ module Ext2fs
 	#  ext2fs.h
 	#  Contém as funções
 	###
+	class Ext2_filsys < FFI::Struct
+		layout(
+	:magic,	:errcode_t,
+	:io,	:io_channel,
+	:flags,	:int,
+	pointer				device_name;
+	struct ext2_super_block	* 	super;
+	unsigned int			blocksize;
+	:fragsize,	:int,
+	:group_desc_count,	:dgrp_t,
+	unsigned long			desc_blocks;
+	struct ext2_group_desc *	group_desc;
+	:inode_blocks_per_group,	:int,
+	:inode_map,	:ext2fs_inode_bitmap,
+	:block_map,	:ext2fs_block_bitmap,
+	errcode_t get_blocks(ext2_filsys fs, ext2_ino_t ino, blk_t *blocks);
+	errcode_t check_directory(ext2_filsys fs, ext2_ino_t ino);
+	errcode_t write_bitmaps(ext2_filsys fs);
+	errcode_t read_inode(ext2_filsys fs, ext2_ino_t ino, struct ext2_inode *inode);
+	errcode_t write_inode(ext2_filsys fs, ext2_ino_t ino, struct ext2_inode *inode);
+	:badblocks,	:ext2_badblocks_list,
+	:dblist,	:ext2_dblist,
+	:stride,	:uint32,	# for mke2fs 
+	struct ext2_super_block *	orig_super;
+	struct ext2_image_hdr *		image_header;
+	:umask,	:uint32,
+	:now,	:time_t,
+	
+	 # Reserved for future expansion
+	:reserved,	:uint32,	7,
+	
+	 # Reserved for the use of the calling application.
+	void *				priv_data;
+	
+	 # Inode cache
+	struct ext2_inode_cache		*icache;
+	:image_io,	:io_channel,
+	
+	 # More callback functions
+	errcode_t get_alloc_block(ext2_filsys fs, blk64_t goal, blk64_t *ret);
+	void block_alloc_stats(ext2_filsys fs, blk64_t blk, int inuse);
+		)
+	end
+	
 	
 	# extern errcode_t ext2fs_open_inode_scan(ext2_filsys fs, int buffer_blocks,
 	# ext2_inode_scan *ret_scan);
