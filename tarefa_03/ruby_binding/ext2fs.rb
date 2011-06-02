@@ -312,52 +312,99 @@ module Ext2fs
 	
 	
 	###
+	#  ext2_io.h
+	#  
+	###
+	class Io_channel < FFI::Struct
+		layout(
+			:magic,	Errcode_t,
+			:manager,	Io_manager,
+			:name,	:char,
+			:block_size,	:int,
+			:refcount,	:int,
+			:flags,	:int,
+			:reserved,	:long,	14,
+			:private_data,	:pointer,
+			:app_data,	:pointer
+		)
+	end
+	attach_function :read_error, [Io_channel, :ulong, :int, :pointer, :size_t, :int, Errcode_t], Errcode_t
+	attach_function :write_error, [Io_channel, :ulong, :int, :pointer, :size_t, :int, Errcode_t], errcode_t
+	class Io_manager < FFI::Struct
+		layout(
+			:magic,	Errcode_t,
+			:name,	:string,
+			:reserved,	:long,	16
+		)
+	end
+			attach_function :open, [:string, :int, Io_channel], Errcode_t
+			attach_function :close, [Io_channel], Errcode_t
+			attach_function :set_blksize, [Io_channel, :int], Errcode_t
+			attach_function :read_blk, [Io_channel, :ulong, :int, :pointer], Errcode_t
+			attach_function :write_blk, [Io_channel, :ulong, :int, :pointer], Errcode_t
+			attach_function :flush, [Io_channel], Errcode_t
+			attach_function :write_byte, [Io_channel, :ulong, :int, :pointer], Errcode_t
+			attach_function :set_option, [Io_channel, :string, :pointer], Errcode_t
+			attach_function :get_stats, [Io_channel, Io_stats], Errcode_t
+			attach_function :read_blk64, [Io_channel, :ulong_long, :int, :pointer], Errcode_t
+			attach_function :write_blk64, [Io_channel, :ulong_long, :int, :pointer], Errcode_t
+	
+	
+	###
 	#  ext2fs.h
 	#  Contém as funções
 	###
+	Ext2_ino_t	= :uint32
+	Blk_t	= :uint32
+	Blk64_t	= :uint64
+	Dgrp_t	= :uint32
+	Ext2_off_t	= :uint32
+	E2_blkcnt_t	= :int64
+	Ext2_dirhash_t	= :uint32
+	
 	class Ext2_filsys < FFI::Struct
+		
 		layout(
-	:magic,	:errcode_t,
-	:io,	:io_channel,
-	:flags,	:int,
-	pointer				device_name;
-	struct ext2_super_block	* 	super;
-	unsigned int			blocksize;
-	:fragsize,	:int,
-	:group_desc_count,	:dgrp_t,
-	unsigned long			desc_blocks;
-	struct ext2_group_desc *	group_desc;
-	:inode_blocks_per_group,	:int,
-	:inode_map,	:ext2fs_inode_bitmap,
-	:block_map,	:ext2fs_block_bitmap,
-	errcode_t get_blocks(ext2_filsys fs, ext2_ino_t ino, blk_t *blocks);
-	errcode_t check_directory(ext2_filsys fs, ext2_ino_t ino);
-	errcode_t write_bitmaps(ext2_filsys fs);
-	errcode_t read_inode(ext2_filsys fs, ext2_ino_t ino, struct ext2_inode *inode);
-	errcode_t write_inode(ext2_filsys fs, ext2_ino_t ino, struct ext2_inode *inode);
-	:badblocks,	:ext2_badblocks_list,
-	:dblist,	:ext2_dblist,
-	:stride,	:uint32,	# for mke2fs 
-	struct ext2_super_block *	orig_super;
-	struct ext2_image_hdr *		image_header;
-	:umask,	:uint32,
-	:now,	:time_t,
-	
-	 # Reserved for future expansion
-	:reserved,	:uint32,	7,
-	
-	 # Reserved for the use of the calling application.
-	void *				priv_data;
-	
-	 # Inode cache
-	struct ext2_inode_cache		*icache;
-	:image_io,	:io_channel,
-	
-	 # More callback functions
-	errcode_t get_alloc_block(ext2_filsys fs, blk64_t goal, blk64_t *ret);
-	void block_alloc_stats(ext2_filsys fs, blk64_t blk, int inuse);
+			:magic,	Errcode_t,
+			:io,	:io_channel,
+			:flags,	:int,
+			:device_name,	:pointer,
+			:super,	:pointer,
+			:blocksize,	:uint,
+			:fragsize,	:int,
+			:group_desc_count,	:dgrp_t,
+			:desc_blocks,	:ulong,
+			:group_desc,	:pointer,
+			:inode_blocks_per_group,	:int,
+			:inode_map,	:ext2fs_inode_bitmap,
+			:block_map,	:ext2fs_block_bitmap,
+			:badblocks,	:ext2_badblocks_list,
+			:dblist,	:ext2_dblist,
+			:stride,	:uint32,	# for mke2fs 
+			:orig_super,	:pointer,
+			:image_header,	:pointer,
+			:umask,	:uint32,
+			:now,	:time_t,
+			
+			 # Reserved for future expansion
+			:reserved,	:uint32,	7,
+			
+			 # Reserved for the use of the calling application.
+			:priv_data,	:pointer,
+			
+			 # Inode cache
+			:icache,	:pointer,
+			:image_io,	:io_channel
 		)
 	end
+		attach_function :get_blocks, [Ext2_filsys, Ext2_ino_t, :pointer], errcode_t
+		attach_function :check_directory, [Ext2_filsys, Ext2_ino_t], errcode_t
+		attach_function :write_bitmaps, [Ext2_filsys], errcode_t
+		attach_function :read_inode, [Ext2_filsys, Ext2_ino_t, :pointer], errcode_t
+		attach_function :write_inode, [Ext2_filsys, Ext2_ino_t, :pointer], errcode_t
+		 # More callback functions
+		attach_function :get_alloc_block, [Ext2_filsys, Blk64_t, :pointer], errcode_t
+		attach_function :block_alloc_stats, [Ext2_filsys, Blk64_t, :int], void
 	
 	
 	# extern errcode_t ext2fs_open_inode_scan(ext2_filsys fs, int buffer_blocks,

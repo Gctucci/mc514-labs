@@ -1,3 +1,4 @@
+#include <ext2fs/ext2_fs.h>
 #include <ext2fs/ext2fs.h>
 #include<stdio.h>
 #include<stdlib.h>
@@ -11,7 +12,7 @@ int main(int argc, char **argv){
 	const char * name;
 	ext2_filsys  fs;
 	errcode_t error;
-	ext2_inode_scan scan;
+	ext2_inode_scan *scan;
 	struct ext2_inode *inode;
 	ext2_ino_t *inode_number;
 	int i;
@@ -26,10 +27,12 @@ int main(int argc, char **argv){
 		if(error){
 			printf("Houve um problema ao abrir o filesystem.\n");
 		}
-		ext2fs_open_inode_scan (fs,0,&scan); //Prepara a variavel scan para iterar sobre os inodes
+		ext2fs_open_inode_scan (fs,0,scan); // Prepara a variavel scan para iterar sobre os inodes
 
-		for(i=0;i<scan.s_inodes_count;i++){
+		for(i=0;i<scan->s_inodes_count;i++){
 			ext2fs_get_next_inode (scan,inode_number,inode);
+//ext2fs_block_iterate (ext2_filsys fs, ext2_ino_t ino, int flags, char *block_buf, int (*func)(ext2_filsys fs, blk_t *blocknr, int blockcnt, void *private), void *private)
+			//ext2fs_block_iterate (fs, ino, flags, block_buf, *func, *private)
 			
 		}
 		ext2fs_close_inode_scan(scan);
