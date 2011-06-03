@@ -8,10 +8,10 @@ else
 	
 	# Gera o primeiro histograma
 	echo "Gerando o histograma de fragmentação de blocos alocados em no. de segmentos"
-	(cd ./dados && ./dados 1 $1 ) | (cd ./histograma && ./histograma.sh) > $hist_1
+	(cd ./dados_c && ./dados 1 $1 ) | (cd ./histograma && ./histograma.sh) > $hist_1
 	
 	# Gera o segundo histograma
 	echo "Gerando o histograma de tamanhos de arquivos em blocos de alocação"
-	(cd ./dados && ./dados 2 $1 ) | (cd ./histograma && ./histograma.sh) > $hist_2
+	(cd ./dados_c && ./dados 2 $1 ) | (cd ./histograma && ./histograma.sh) > $hist_2
 	echo
 fi

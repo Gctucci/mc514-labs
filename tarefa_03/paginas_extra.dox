@@ -8,25 +8,13 @@
 
 @page page0 Introdução
 
-O projeto desenvolvido tem por base mensurar e implementar diferentes tipos de IO, e verificar seu impacto quanto
-ao tempo de acesso e execução.\ Para este experimento foram implementadas várias formas de copiar arquivos para outros
-arquivos (diretórios).\ Após essa implementação, mensura-se o tempo para cada uma, rodando várias vezes o programa
-para um mesmo arquivo, e confrontam-se essas estatísticas de cada implementação com o comando cp nativo dos sistemas Unix. 
+O projeto desenvolvido tem por base percorrer (iterar) sobre um sistemas de arquivos passado, e obter estatísticas relevantes a respeito,
+como o número de fragmentos livres, o número de fragmentos ocupados, bem como um historama dos dados obtidos.
 
 
 @page page1 Decisões de Projeto
-
-Como forma de implementar as diferentes opções de IO, optamos por criar 4 funções diferentes, que serão chamadas por linha
-de comando na forma ./mycp [nome_do_arquivo] [nome_do_destino] [função].
-Caso o parâmetro [função] não seja passado, o programa utiliza a implementação padrão da função mycp1().
-
-Para medirmos o tempo de cada execução, usamos o comando time. Para limpar o cache após cada execução, executamos drop_cache,
-conforme definido na especificação do trabalho. Incluímos uma versão local, para quando o projeto não for executar nos laboratórios 
-do IC.
-
-Afim de facilitar a obtenção de várias medidas de tempo, optamos por escrever um script que irá executar o comando várias vezes, 
-para melhorar as estatísticas de tempo. Sua execução é na forma ./testar [arquivo a ser copiado] [destino] [número da implementação] 
-[quantidade de execuções], sendo o valor 0 utilizado para o cp original do unix.
+Para iterar sobre o sistema de arquivos e obter os dados relevantes a respeito foi utilizada a biblioteca
+EXT2FS Library Functions (ext2fs.h), utilizada para filesystems ext*.
 
 Optamos por usar um makefile para compilar, depurar e gerar a documentação do programa.
 	@li Compilar: make

@@ -6,9 +6,9 @@ read titulo
 # Parte inicial do html, com o título substituído
 if [ -e ./partes/top.html ]
 then
-	cat ./partes/top.html | sed "s/titulo/${titulo}/"
+	cat ./partes/top.html
 else
-	cat ./histograma/partes/top.html | sed "s/titulo/${titulo}/"
+	cat ./histograma/partes/top.html
 fi
 
 # Lê os dados e conta cada categoria
