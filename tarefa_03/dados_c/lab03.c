@@ -52,9 +52,9 @@ int main(int argc, char *argv[]){
 	if(argc < 3){
 		printf("Numero de argumentos inválidos. Programa deve ser executado da seguinte maneira:\n\
 			--> make [opcao] [filesystem]\n\
-			opcao 1 = histograma de fragmentação de blocos alocados em no. de segmentos\n\
-			opcao 2 = histograma de tamanhos de arquivos em blocos de alocacao\n\
-			opcao 3 = Retorna o numero de fragmentos ocupados(em KB/segmento)");
+			opcao 1 = dados de fragmentação de blocos alocados em no. de segmentos\n\
+			opcao 2 = dados de tamanhos de arquivos em blocos de alocacao\n\
+			opcao 3 = Retorna o numero de fragmentos ocupados(em KB/segmento)\n");
 	}
 	else{
 		/*Abre o sistema de arquivos digitado (passado como argumento), usando as configurações padrão da função	
@@ -103,12 +103,14 @@ int main(int argc, char *argv[]){
 				}
 				
         		}
-			if(argv[1][0] == '3'){
-				frag_ocupados = taminode/(tamfrag*1024);
-				printf("%d\n",frag_ocupados);		
-			}
-			
 		}
+		if(argv[1][0] == '3'){
+			//frag_livres = taminode/(tamfrag*1024.0);
+			//printf("Espaço livre / no. de segmentos contíguos na lista de blocos livres: %d KB / segm\n",frag_ocupados);
+			frag_ocupados = taminode/(tamfrag*1024.0);
+			printf("Espaço ocupado / no. de segmentos contiguos alocados em todos os arquivos/i-nodes: %d KB / segm\n",frag_ocupados);
+		}
+			
 		/*Fecha(termina) a variavel scan*/
 		ext2fs_close_inode_scan(scan);
 		

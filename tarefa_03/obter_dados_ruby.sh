@@ -1,4 +1,5 @@
 #!/bin/sh
+echo "Implementação não concluída, executar o script ./obter_dados_c.sh"
 if [ $# = 0 ]
 then
 	echo "Uso: ./obter_dados.sh [caminho absoluto para o arquivo/partição]"
