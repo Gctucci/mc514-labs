@@ -8,100 +8,74 @@
 
 @page page0 Introdução
 
-O projeto desenvolvido tem por base percorrer (iterar) sobre um sistemas de arquivos passado, e obter estatísticas relevantes a respeito,
-como o número de fragmentos livres, o número de fragmentos ocupados, bem como um historama dos dados obtidos.
+O projeto desenvolvido tem por base percorrer (iterar) sobre um sistemas de 
+arquivos passado, e obter estatísticas relevantes a respeito, como o número de 
+fragmentos livres, o número de fragmentos ocupados, bem como um historama dos 
+dados obtidos.
 
 
 @page page1 Decisões de Projeto
-Para iterar sobre o sistema de arquivos e obter os dados relevantes a respeito foi utilizada a biblioteca
-EXT2FS Library Functions (ext2fs.h), utilizada para filesystems ext*.
+Para iterar sobre o sistema de arquivos e obter os dados relevantes a respeito 
+foi utilizada a biblioteca EXT2FS Library Functions (ext2fs.h), utilizada para 
+filesystems ext*.
 
-Optamos por usar um makefile para compilar, depurar e gerar a documentação do programa.
+
+Separamos o projeto em partes:
+	@li Um executável(./dados) para obter os dados do sistema de arquivos
+
+Ele prossui três opções: a primeira, para imprimir os dados de fragmentação de 
+blocos alocados em no. de segmentos; a segunda, para imprimir os dados de 
+tamanhos de arquivos em blocos de alocação; e a terceira, para imprimir o numero
+ de fragmentos ocupados(em KB/segmento).
+
+Ele recebe o número da opção e o caminho para a imagem a ser examinada.
+
+	@li Um executável(./contagem) que, recebendo um conjunto de dados, separa-os
+ pelos tamanhos para o histograma
+
+Ele recebe uma série de dados, um por linha, e os seleciona em cada intervalo do
+ histograma, imprimindo o trecho do html a ser usado no histograma.
+
+	@li Um script(histograma.sh) que, usando o executável de separar, gera um 
+histograma em html/javascript
+
+Ele inclui os arquivos top.html e bottom.html, que juntos com a saída do 
+./contagem gera um html, que serve de base para o histograma em javascript.
+
+	@li Um script(obter_dados_c.sh) que, usando todos os outros códigos, gera os
+ dois histogramas e obtém as relações pedidas.
+
+Ele executa automaticamente o ./dados, redirecionando sua saída para o script de
+ gerar histogramas, além de imprimir os dados da opção 3.
+
+
+
+Optamos por usar um makefile para compilar e gerar a documentação do programa.
 	@li Compilar: make
-	@li Depurar: make test
 	@li Documentação: make doc
-	@li Testar leaks de memória: make mem
+
+
+O comando "make" compila todos os executáveis da tarefa.
 
 O comando "make doc" gera uma documentação em html e em latex (que depois é convertida em
 um relatório -este- em pdf) com a ajuda da ferramenta Doxygen, na pasta doc.
 
 
-Na função mycp1() foi utilizada a implementação mais simples de read() e write() com I/O bloqueante.
-Essa função simplesmente abre um arquivo de leitura, executa um chdir() e depois abre o arquivo de escrita,
-escrevendo continuamente (loop) em blocos de 4kb.
-
-Na função mycp2() foi utilizada a implementação com I/O não bloqueante.
-Essa função implementa as funções set_fl() e clr_fl(), que setam/cancelam o I/O como sendo não bloqueante
-através da utilização da opção O_NONBLOCK, executando um loop como mycp1().
-
-Na função mycp3() foi utilizada a implementação com a utilização de select(), que verifica a disponibilidade
-de descritores de arquivos previamente setados para serem observados (um para leitura e outro para escrita),
-para que alguma operação de I/O possa ser executada. Observou-se um desempenho menor (tempo de execução maior)
-nesta função em relação às demais.
-
-Na função mycp4() foi utilizada o conceito de mmaps (Memory-Mapped I/O), de forma que lê-se o arquivo em um único
-comando, sabendo previamente o seu tamanho através da função fstat().
-Por não haverem loops na sua execução, nem o comando read() - potencialmente bloqueável - esta função apresentou um
-desempenho ligeiramente melhor que as demais.
-
-Na função mycp5() está uma tentativa de Kernel Asynchonous I/O, implementada pela biblioteca aio.h, tal como explicada nessa
-página: 
-http://www.ibm.com/developerworks/linux/library/l-async/?ca=dgr-lnxw16UsingPOISIXAIOAPI. Entretanto, algumas 
-dificuldades impediram sua conclusão(explicadas na próxima sessão).
-
-
 
 @page page2 Dificuldades
 
-As principais dificuldades enfrentadas no trabalho foi a definição e implementação eficiente de uma função mycp4()
-com desempenho melhor (na média) do que as demais. Inicialmente pensou-se em uma implementação de I/O assíncrono,
-utilizando a biblioteca aio.h e as funções aio_read() e aio_write(). Porém, foi difícil implementá-la com exatidão, uma 
-vez que a documentação sobre as funções era bem escassa. A função nunca copiava os arquivos de forma correta, geralmente 
-copiando apenas um bloco de 4kb, mesmo executando-se a operação em loop. Ao se manipular o offset, chegamos ao ponto de 
-criar um arquivo do mesmo tamanho do original, mas por algum motivo ele continha lacunas em branco, mesmo se o offset não 
-fosse alterado no caso de não haver leitura.
-
-Dessa forma, por razões de facilidade de implementação, utilizou-se a biblioteca mmap.h, e as funções mmap() e memcpy(),
-evitando assim um loop na execução e melhorando o desempenho geral da função.
+A maior dificuldade foi a falta de documentação da biblioteca(ext2fs), sendo 
+necessário um grande esforço da turma para tentar decifrar suas funcionalidades.
 
 
+Além disso, tentamos fazer um binding para Ruby, usando a ferramenta FFI; 
+entretanto, é difícil encontrar documentação sobre como lidar com os ponteiros 
+para função que aparecem em algumas structs, além de não haver uma maneira clara
+ de lidar com structs aninhadas. Com isso, perdemos muito tempo que poderia ter 
+sido usado para fazer a tarefa diretamente em C(que foi a segunda opção).
 
-@page page3 Estrutura do Código
+O código da tentativa se encontra na pasta ruby_binding.
 
-O código foi dividido em 4 arquivos principais: um arquivo .h (mycp.h), contendo as definições das funções e bibliotecas utilizadas,
-e cinco arquivos . c (mycp.c, mycp1.c, mycp2.c, mycp3.c, mycp4.c).
-
-O tamanho da blocagem utilizados para as operações de leitura está definido em mycp.h : MAXBUFF.
-
-Cada arquivo mycp*.c contém uma única função que implementa alguma opção de cópia/escrita de arquivos, seja por meio de loops de escrita,
-usando I/O não bloqueante, select() ou mmap().
-
-Para maiores informações, verifique a estrutura dos arquivos na página Doxygen correspondente.
-
-@page page4 Análise Estatística
-
-Primeiramente, foi realizada uma série de medições de tempo individualmente para cada função mycp, que resultou na seguinte análise:
- 
-	Para o arquivo copiado, as diferenças entre mycp1(), mycp2() foram muito pequenas (algumas casas decimais de diferença);
-	Em termos de tempo real, mycp1() perde para mycp2(), porém em tempo de user mycp2() possui um desempenho ligeiramente menor.
-	
-	A função mycp2() se mostrou muito próxima do desempenho do cp padrão, porém com tempo sys ligeiramente maior.
-
-	A função mycp3() entretanto, mostrou um desempenho ligeiramente pior quando comparado às anteriores, devido ao uso da função select().
-
-	A função mycp4() conseguiu uma ligeira melhora em tempo real, porém ao custo de um tempo de user maior. 
-
-Depois de concluído o script de teste em massa, fizemos 3 benchmarks:
-
-O primeiro, com um arquivo de 177,6MB, mostrou um desempenho muito mais lento da mycp4, ao contrário do observado pelos testes anteriores.
-O baixíssimo tempo de execução do cp original se deve a um erro do script de teste.
-
-O segundo benchmark foi realizado com um arquivo vazio, mostrando que o cp do unix tem o maior overhead inicial, com mais que o dobro do
-mycp4.
-
-O terceiro benchmark foi feito corrigindo os erros do primeiro, e mostrou resultados semelhantes, com um tempo de execução do mycp4 sendo
-muito alto, o que indica algum bug na implementação que não conseguimos encontrar, ou talvez alguma diferença no funcionamento do programa 
-em diferentes computadores.
 
  * 
  * 
